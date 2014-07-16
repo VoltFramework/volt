@@ -24,8 +24,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mesoslib.GetEvent()
-
+	event := mesoslib.GetEvent()
+	log.Println("Received ID:", *event.Registered.FrameworkId.Value)
 	if err := mesoslib.UnRegisterFramework(frameworkInfo); err != nil {
 		log.Fatal(err)
 	}

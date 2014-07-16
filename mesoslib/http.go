@@ -6,13 +6,16 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/vieux/volt/mesosproto"
-
 	"code.google.com/p/goprotobuf/proto"
+
+	"github.com/gorilla/mux"
+	"github.com/vieux/volt/mesosproto"
 )
 
 func init() {
-	http.HandleFunc("/{.*}/mesos.internal.FrameworkRegisteredMessage", FrameworkRegisteredMessage)
+	r := mux.NewRouter()
+	r.HandleFunc("/{scheduler}/mesos.internal.FrameworkRegisteredMessage", FrameworkRegisteredMessage)
+	http.Handle("/", r)
 	go func() {
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
 			log.Fatalf("failed to start listening on port %d", port)
@@ -31,15 +34,15 @@ func FrameworkRegisteredMessage(w http.ResponseWriter, r *http.Request) {
 	message := new(mesosproto.FrameworkRegisteredMessage)
 	if proto.Unmarshal(data, message) != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+	} else {
+		eventType := mesosproto.Event_REGISTERED
+		events <- &mesosproto.Event{
+			Type: &eventType,
+			Registered: &mesosproto.Event_Registered{
+				FrameworkId: message.FrameworkId,
+				MasterInfo:  message.MasterInfo,
+			},
+		}
+		w.WriteHeader(http.StatusOK)
 	}
-	eventType := mesosproto.Event_REGISTERED
-	events <- &mesosproto.Event{
-		Type: &eventType,
-		Registered: &mesosproto.Event_Registered{
-			FrameworkId: message.FrameworkId,
-			MasterInfo:  message.MasterInfo,
-		},
-	}
-	w.WriteHeader(http.StatusOK)
 }

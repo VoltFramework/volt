@@ -33,9 +33,8 @@ func init() {
 	}
 
 	for _, addr := range addrs {
-		if !strings.HasPrefix(addr, "127") {
+		if ip == "" || !strings.HasPrefix(addr, "127") {
 			ip = addr
-			break
 		}
 	}
 }
