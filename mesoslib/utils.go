@@ -2,26 +2,34 @@ package mesoslib
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"strings"
 
 	"code.google.com/p/goprotobuf/proto"
-
+	"github.com/Sirupsen/logrus"
 	"github.com/vieux/volt/mesosproto"
 )
 
-var (
-	master = flag.String("master", "localhost:5050", "Master to connect to")
+type MesosLib struct {
+	master string
+	log    *logrus.Logger
 	ip     string
-	port   = 9091
-)
+	port   int
 
-func init() {
+	events chan *mesosproto.Event
+}
+
+func NewMesosLib(master string, log *logrus.Logger) *MesosLib {
+	m := &MesosLib{
+		log:    log,
+		master: master,
+		port:   9091,
+		events: make(chan *mesosproto.Event),
+	}
+
 	name, err := os.Hostname()
 	if err != nil {
 		log.Fatalf("Failed to get hostname: %+v", err)
@@ -33,30 +41,32 @@ func init() {
 	}
 
 	for _, addr := range addrs {
-		if ip == "" || !strings.HasPrefix(addr, "127") {
-			ip = addr
+		if m.ip == "" || !strings.HasPrefix(addr, "127") {
+			m.ip = addr
 		}
 	}
+	m.initAPI()
+	return m
 }
 
-func send(call *mesosproto.Call, path string) error {
+func (m *MesosLib) send(call *mesosproto.Call, path string) error {
 	data, err := proto.Marshal(call)
 	if err != nil {
 		return err
 	}
 
-	url := fmt.Sprintf("http://%s/master/%s", *master, path)
+	url := fmt.Sprintf("http://%s/master/%s", m.master, path)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
 	req.Header.Add("Connection", "keep-alive")
 	req.Header.Add("Content-type", "application/octet-stream")
-	req.Header.Add("Libprocess-From", fmt.Sprintf("mesoslib@%s:%d", ip, port))
+	req.Header.Add("Libprocess-From", fmt.Sprintf("mesoslib@%s:%d", m.ip, m.port))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("error while posting to %s: %v", url, err)
+		return err
 	}
 
 	if resp != nil && resp.StatusCode != http.StatusAccepted {

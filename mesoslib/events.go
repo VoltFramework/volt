@@ -1,11 +1,12 @@
 package mesoslib
 
-import "github.com/vieux/volt/mesosproto"
-
-var (
-	events = make(chan *mesosproto.Event)
+import (
+	"github.com/Sirupsen/logrus"
+	"github.com/vieux/volt/mesosproto"
 )
 
-func GetEvent() *mesosproto.Event {
-	return <-events
+func (m *MesosLib) GetEvent() *mesosproto.Event {
+	e := <-m.events
+	m.log.WithFields(logrus.Fields{"type": e.Type}).Debug("Received event from master.")
+	return e
 }

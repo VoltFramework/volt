@@ -1,32 +1,59 @@
 package main
 
 import (
-	"flag"
-	"log"
-
+	"github.com/Sirupsen/logrus"
+	flag "github.com/dotcloud/docker/pkg/mflag"
+	"github.com/vieux/volt/api"
 	"github.com/vieux/volt/mesoslib"
 	"github.com/vieux/volt/mesosproto"
 )
 
+func init() {
+}
+
 func main() {
 	var (
-		//		port          = flag.Int("port", 4343, "Port to listen on for HTTP endpoint")
-		user          = flag.String("user", "", "User to execute commands as")
+		log           = logrus.New()
+		port          = flag.Int([]string{"p", "-port"}, 8080, "Port to listen on for the API")
+		master        = flag.String([]string{"m", "-master"}, "localhost:5050", "Master to connect to")
+		debug         = flag.Bool([]string{"D", "-debug"}, false, "")
 		frameworkName = "volt"
+		user          = ""
 	)
 
 	flag.Parse()
 
-	log.Println("Starting", frameworkName)
-	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: user}
+	if *debug {
+		log.Level = logrus.Debug
+	}
 
-	if err := mesoslib.RegisterFramework(frameworkInfo); err != nil {
+	// initialize MesosLib
+	m := mesoslib.NewMesosLib(*master, log)
+
+	log.Infof("Starting %s...", frameworkName)
+	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
+
+	// try to register against the master
+	if err := m.RegisterFramework(frameworkInfo); err != nil {
 		log.Fatal(err)
 	}
 
-	event := mesoslib.GetEvent()
-	log.Println("Received ID:", *event.Registered.FrameworkId.Value)
-	if err := mesoslib.UnRegisterFramework(frameworkInfo); err != nil {
+	// wait for the registered event
+	event := m.GetEvent()
+	if *event.Type != mesosproto.Event_REGISTERED {
+		log.Fatalln("Unsuccessful registration.")
+	}
+
+	log.WithFields(logrus.Fields{"FrameworkId": *event.Registered.FrameworkId.Value}).Info("Registration successful.")
+	frameworkInfo.Id = event.Registered.FrameworkId
+
+	// once we are registered, start the API
+	if err := api.NewAPI(m, frameworkInfo, log).ListenAndServe(*port); err != nil {
+		log.Fatal(err)
+	}
+
+	//TODO catch signal to unregister cleanly
+	if err := m.UnRegisterFramework(frameworkInfo); err != nil {
 		log.Fatal(err)
 	}
 }
