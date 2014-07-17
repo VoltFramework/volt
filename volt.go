@@ -19,6 +19,7 @@ func main() {
 		debug         = flag.Bool([]string{"D", "-debug"}, false, "")
 		frameworkName = "volt"
 		user          = ""
+		frameworkInfo = &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
 	)
 
 	flag.Parse()
@@ -29,9 +30,6 @@ func main() {
 
 	// initialize MesosLib
 	m := mesoslib.NewMesosLib(*master, log)
-
-	log.Infof("Starting %s...", frameworkName)
-	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
 
 	// try to register against the master
 	if err := m.RegisterFramework(frameworkInfo); err != nil {
