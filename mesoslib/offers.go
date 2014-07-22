@@ -2,7 +2,7 @@ package mesoslib
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/vieux/volt/mesosproto"
+	"github.com/VoltFramework/volt/mesosproto"
 )
 
 func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, mem float64) error {

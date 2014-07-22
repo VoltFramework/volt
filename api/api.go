@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/VoltFramework/volt/mesoslib"
+	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/gorilla/mux"
-	"github.com/vieux/volt/mesoslib"
-	"github.com/vieux/volt/mesosproto"
 )
 
 type API struct {
@@ -88,6 +88,7 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
 	api.log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"GET": {

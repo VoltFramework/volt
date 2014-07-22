@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/vieux/volt/mesosproto"
+	"github.com/VoltFramework/volt/mesosproto"
 )
 
 type MesosLib struct {

@@ -8,8 +8,8 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/gorilla/mux"
-	"github.com/vieux/volt/mesosproto"
 )
 
 func (m *MesosLib) initAPI() {

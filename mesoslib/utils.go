@@ -7,7 +7,7 @@ import (
 
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/Sirupsen/logrus"
-	"github.com/vieux/volt/mesosproto"
+	"github.com/VoltFramework/volt/mesosproto"
 )
 
 func (m *MesosLib) GetEvent() *mesosproto.Event {

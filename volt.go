@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/VoltFramework/volt/api"
+	"github.com/VoltFramework/volt/mesoslib"
+	"github.com/VoltFramework/volt/mesosproto"
 	flag "github.com/dotcloud/docker/pkg/mflag"
-	"github.com/vieux/volt/api"
-	"github.com/vieux/volt/mesoslib"
-	"github.com/vieux/volt/mesosproto"
 )
 
 func init() {
