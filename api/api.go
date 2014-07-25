@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -36,6 +38,7 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 }
 
 type Task struct {
+	ID      string  `json:"id"`
 	Command string  `json:"cmd"`
 	Cpus    float64 `json:"cpus,string"`
 	Mem     float64 `json:"mem,string"`
@@ -58,9 +61,22 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := make([]byte, 6)
+	n, err := rand.Read(id)
+	if n != len(id) || err != nil {
+		api.log.Warn(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	task.ID = hex.EncodeToString(id)
+
 	go func() {
-		if err := api.m.RequestOffer(api.frameworkInfo, task.Cpus, task.Mem); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		offer, err := api.m.RequestOffer(api.frameworkInfo, task.Cpus, task.Mem)
+		if err != nil {
+			api.log.Warn(err)
+		}
+		if offer != nil {
+			api.m.LaunchTask(api.frameworkInfo, offer, task.Command, task.ID)
 		}
 	}()
 
@@ -88,7 +104,6 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
 	api.log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"GET": {
@@ -113,6 +128,6 @@ func (api *API) ListenAndServe(port int) error {
 			})
 		}
 	}
-
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }

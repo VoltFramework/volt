@@ -5,50 +5,61 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, mem float64) error {
+func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, mem float64) (*mesosproto.Offer, error) {
 	m.log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem}).Info("Requesting offers...")
 
-	callType := mesosproto.Call_REQUEST
-	cpusName := "cpus"
-	memoryName := "memory"
-	scalar := mesosproto.Value_SCALAR
+	var event *mesosproto.Event
 
-	requestCall := &mesosproto.Call{
-		FrameworkInfo: frameworkInfo,
-		Type:          &callType,
-		Request: &mesosproto.Call_Request{
-			Requests: []*mesosproto.Request{
-				&mesosproto.Request{
-					Resources: []*mesosproto.Resource{
-						&mesosproto.Resource{
-							Name: &cpusName,
-							Type: &scalar,
-							Scalar: &mesosproto.Value_Scalar{
-								Value: &cpus,
+	select {
+	case event = <-m.events:
+		if *event.Type != mesosproto.Event_OFFERS {
+			event = nil
+		}
+	}
+
+	if event == nil {
+		callType := mesosproto.Call_REQUEST
+		cpusName := "cpus"
+		memoryName := "memory"
+		scalar := mesosproto.Value_SCALAR
+
+		requestCall := &mesosproto.Call{
+			FrameworkInfo: frameworkInfo,
+			Type:          &callType,
+			Request: &mesosproto.Call_Request{
+				Requests: []*mesosproto.Request{
+					&mesosproto.Request{
+						Resources: []*mesosproto.Resource{
+							&mesosproto.Resource{
+								Name: &cpusName,
+								Type: &scalar,
+								Scalar: &mesosproto.Value_Scalar{
+									Value: &cpus,
+								},
 							},
-						},
-						&mesosproto.Resource{
-							Name: &memoryName,
-							Type: &scalar,
-							Scalar: &mesosproto.Value_Scalar{
-								Value: &mem,
+							&mesosproto.Resource{
+								Name: &memoryName,
+								Type: &scalar,
+								Scalar: &mesosproto.Value_Scalar{
+									Value: &mem,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
+		}
+
+		if err := m.send(requestCall, "mesos.internal.ResourceRequestMessage"); err != nil {
+			return nil, err
+		}
+
+		event = <-m.events
 	}
 
-	if err := m.send(requestCall, "mesos.internal.ResourceRequestMessage"); err != nil {
-		return err
+	if len(event.Offers.Offers) > 0 {
+		m.log.WithFields(logrus.Fields{"Id": event.Offers.Offers[0].Id}).Info("Received offer.")
+		return event.Offers.Offers[0], nil
 	}
-
-	event := <-m.events
-
-	for _, offer := range event.Offers.Offers {
-		m.log.Warnln("Received offer: %#v", offer)
-	}
-
-	return nil
+	return nil, nil
 }
