@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>Volt</title>
 
     <!-- Bootstrap core CSS -->
     <link href="http://maxcdn.bootstrapcdn.com/bootswatch/3.2.0/lumen/bootstrap.min.css" rel="stylesheet">
@@ -27,18 +27,27 @@
       
       <script type="text/ng-template" id="myModalContent.html">
         <div class="modal-header">
-            <h3 class="modal-title">I'm a modal!</h3>
+            <h3 class="modal-title">Add Task</h3>
         </div>
         <div class="modal-body">
-            <ul>
-                <li ng-repeat="item in items">
-                    <a ng-click="selected.item = item">{{ item }}</a>
-                </li>
-            </ul>
-            Selected: <b>{{ selected.item }}</b>
+            <form role="form">
+                <div class="form-group">
+                    <label for="inputCPUs">CPUs</label>
+                    <input type="text" class="form-control" id="inputCPUs" placeholder="1">
+                </div>
+                  <div class="form-group">
+                    <label for="inputMEM">MEM</label>
+                    <input type="text" class="form-control" id="inputMEM" placeholder="512">
+                  </div>
+              <div class="form-group">
+                <label for="inputCommand">Command</label>
+                <input type="test"  class="form-control" id="inputCommand">
+                <p class="help-block">Use absolute path, like /bin/ls</p>
+              </div>
+        </form>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-primary" ng-click="send()">SEND</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </script>
