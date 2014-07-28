@@ -7,46 +7,34 @@ voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', function ($
 }]);
 
 
-voltControllers.controller('ModalDemoCtrl', function ($scope, $modal, $log) {
-
-  $scope.items = ['item1', 'item2', 'item3'];
-
+voltControllers.controller('Modal', function ($scope, $modal, $log) {
+  $scope.task = {
+    cpus:'0.5',
+    mem:'512',
+    cmd:'/bin/ls'
+  }
   $scope.open = function (size) {
 
     var modalInstance = $modal.open({
-      templateUrl: 'myModalContent.html',
-      controller: ModalInstanceCtrl,
+      templateUrl: 'modal.html',
+      controller:  ModalCtrl,
       size: size,
-      resolve: {
-        items: function () {
-          return $scope.items;
-        }
-      }
-    });
-
-    modalInstance.result.then(function (selectedItem) {
-      $scope.selected = selectedItem;
-    }, function () {
-      $log.info('Modal dismissed at: ' + new Date());
+      resolve: {task: function() {return $scope.task;}
+    }
     });
   };
 });
 
-// Please note that $modalInstance represents a modal window (instance) dependency.
-// It is not the same as the $modal service used above.
+var ModalCtrl = function ($scope, $modalInstance, $http, task) {
+    $scope.task = task;
+    
+    $scope.send = function () {
+        $http({method: 'POST', url: '/tasks', data : $scope.task, headers:{'Accept': 'application/json', 'Content-Type': 'application/json; ; charset=UTF-8'}}).success(function(data) {
+    });
+        $modalInstance.dismiss('send');
+    };
 
-var ModalInstanceCtrl = function ($scope, $modalInstance, items) {
-
-  $scope.items = items;
-  $scope.selected = {
-    item: $scope.items[0]
-  };
-
-  $scope.ok = function () {
-    $modalInstance.close($scope.selected.item);
-  };
-
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
+    $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+    };
 };

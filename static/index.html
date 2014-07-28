@@ -25,7 +25,7 @@
 
   <body>
       
-      <script type="text/ng-template" id="myModalContent.html">
+      <script type="text/ng-template" id="modal.html">
         <div class="modal-header">
             <h3 class="modal-title">Add Task</h3>
         </div>
@@ -33,17 +33,17 @@
             <form role="form">
                 <div class="form-group">
                     <label for="inputCPUs">CPUs</label>
-                    <input type="text" class="form-control" id="inputCPUs" placeholder="1">
+                    <input type="text" class="form-control" ng-model="task.cpus" id="inputCPUs" placeholder="{{task.cpus}}">
                 </div>
                   <div class="form-group">
                     <label for="inputMEM">MEM</label>
-                    <input type="text" class="form-control" id="inputMEM" placeholder="512">
+                    <input type="text" class="form-control" ng-model="task.mem" id="inputMEM">
                   </div>
-              <div class="form-group">
-                <label for="inputCommand">Command</label>
-                <input type="test"  class="form-control" id="inputCommand">
-                <p class="help-block">Use absolute path, like /bin/ls</p>
-              </div>
+                <div class="form-group">
+                    <label for="inputCommand">Command</label>
+                    <input type="text" class="form-control" ng-model="task.cmd" id="inputCommand">
+                    <p class="help-block">Use absolute path, like /bin/ls</p>
+                </div>
         </form>
         </div>
         <div class="modal-footer">
@@ -65,7 +65,7 @@
           <a class="navbar-brand" href="#"><img style="margin-top: -9px;" src="img/logo.png" alt="volt"></a>
         </div>
         <div class="collapse navbar-collapse">
-            <ul class="nav navbar-nav navbar-right" ng-controller="ModalDemoCtrl">
+            <ul class="nav navbar-nav navbar-right" ng-controller="Modal">
             <li><button style="max-width:100px; margin-top: 10px;" class="btn btn-primary btn-sm" ng-click="open()">Add task</button></li>
           </ul>
         </div><!--/.nav-collapse -->
