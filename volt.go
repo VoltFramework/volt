@@ -8,9 +8,6 @@ import (
 	flag "github.com/dotcloud/docker/pkg/mflag"
 )
 
-func init() {
-}
-
 func main() {
 	var (
 		log           = logrus.New()

@@ -31,16 +31,26 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string) error
 		return err
 	}
 
-	event := <-m.GetEvent(mesosproto.Event_UPDATE)
-
-	if err := m.send(&mesosproto.StatusUpdateAcknowledgementMessage{
-		FrameworkId: m.frameworkInfo.Id,
-		SlaveId:     event.Update.Status.SlaveId,
-		TaskId:      event.Update.Status.TaskId,
-		Uuid:        event.Update.Uuid,
-	}, "mesos.internal.StatusUpdateAcknowledgementMessage"); err != nil {
-		return err
+	for {
+		event := <-m.GetEvent(mesosproto.Event_UPDATE)
+		switch *event.Update.Status.State {
+		case mesosproto.TaskState_TASK_STARTING:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is starting.")
+		case mesosproto.TaskState_TASK_RUNNING:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is running.")
+		case mesosproto.TaskState_TASK_FINISHED:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is finished.")
+			return nil
+		case mesosproto.TaskState_TASK_FAILED:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task has failed.")
+			return nil
+		case mesosproto.TaskState_TASK_KILLED:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was killed.")
+			return nil
+		case mesosproto.TaskState_TASK_LOST:
+			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was lost.")
+			return nil
+		}
 	}
-
 	return nil
 }
