@@ -37,10 +37,7 @@ func main() {
 	}
 
 	// wait for the registered event
-	event := m.GetEvent()
-	if *event.Type != mesosproto.Event_REGISTERED {
-		log.Fatalln("Unsuccessful registration.")
-	}
+	event := <-m.GetEvent(mesosproto.Event_REGISTERED)
 
 	log.WithFields(logrus.Fields{"FrameworkId": *event.Registered.FrameworkId.Value}).Info("Registration successful.")
 	frameworkInfo.Id = event.Registered.FrameworkId

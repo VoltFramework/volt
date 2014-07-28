@@ -15,7 +15,7 @@ type MesosLib struct {
 	ip     string
 	port   int
 
-	events chan *mesosproto.Event
+	events events
 }
 
 func NewMesosLib(master string, log *logrus.Logger) *MesosLib {
@@ -23,7 +23,10 @@ func NewMesosLib(master string, log *logrus.Logger) *MesosLib {
 		log:    log,
 		master: master,
 		port:   9091,
-		events: make(chan *mesosproto.Event),
+		events: events{
+			mesosproto.Event_REGISTERED: make(chan *mesosproto.Event),
+			mesosproto.Event_OFFERS:     make(chan *mesosproto.Event),
+		},
 	}
 
 	name, err := os.Hostname()

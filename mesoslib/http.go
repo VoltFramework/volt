@@ -64,13 +64,13 @@ func (m *MesosLib) FrameworkRegisteredMessage(w http.ResponseWriter, r *http.Req
 		return err
 	}
 	eventType := mesosproto.Event_REGISTERED
-	m.events <- &mesosproto.Event{
+	m.AddEvent(eventType, &mesosproto.Event{
 		Type: &eventType,
 		Registered: &mesosproto.Event_Registered{
 			FrameworkId: message.FrameworkId,
 			MasterInfo:  message.MasterInfo,
 		},
-	}
+	})
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
@@ -82,12 +82,12 @@ func (m *MesosLib) ResourceOffersMessage(w http.ResponseWriter, r *http.Request,
 		return err
 	}
 	eventType := mesosproto.Event_OFFERS
-	m.events <- &mesosproto.Event{
+	m.AddEvent(eventType, &mesosproto.Event{
 		Type: &eventType,
 		Offers: &mesosproto.Event_Offers{
 			Offers: message.Offers,
 		},
-	}
+	})
 	w.WriteHeader(http.StatusOK)
 	return nil
 }

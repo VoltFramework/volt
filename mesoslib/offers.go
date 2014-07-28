@@ -11,10 +11,7 @@ func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, m
 	var event *mesosproto.Event
 
 	select {
-	case event = <-m.events:
-		if *event.Type != mesosproto.Event_OFFERS {
-			event = nil
-		}
+	case event = <-m.GetEvent(mesosproto.Event_OFFERS):
 	}
 
 	if event == nil {
@@ -54,7 +51,7 @@ func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, m
 			return nil, err
 		}
 
-		event = <-m.events
+		event = <-m.GetEvent(mesosproto.Event_OFFERS)
 	}
 
 	if len(event.Offers.Offers) > 0 {

@@ -6,15 +6,8 @@ import (
 	"net/http"
 
 	"code.google.com/p/goprotobuf/proto"
-	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
 )
-
-func (m *MesosLib) GetEvent() *mesosproto.Event {
-	e := <-m.events
-	m.log.WithFields(logrus.Fields{"type": e.Type}).Debug("Received event from master.")
-	return e
-}
 
 func (m *MesosLib) send(call *mesosproto.Call, path string) error {
 	data, err := proto.Marshal(call)
