@@ -5,24 +5,18 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) RegisterFramework(frameworkInfo *mesosproto.FrameworkInfo) error {
-	m.log.WithFields(logrus.Fields{"master": m.master}).Info("Registering framework...")
+func (m *MesosLib) RegisterFramework() error {
+	m.Log.WithFields(logrus.Fields{"master": m.master}).Info("Registering framework...")
 
-	callType := mesosproto.Call_REGISTER
-	registerCall := mesosproto.Call{
-		Type:          &callType,
-		FrameworkInfo: frameworkInfo,
-	}
-	return m.send(&registerCall, "mesos.internal.RegisterFrameworkMessage")
+	return m.send(&mesosproto.RegisterFrameworkMessage{
+		Framework: m.frameworkInfo,
+	}, "mesos.internal.RegisterFrameworkMessage")
 }
 
-func (m *MesosLib) UnRegisterFramework(frameworkInfo *mesosproto.FrameworkInfo) error {
-	m.log.WithFields(logrus.Fields{"master": m.master}).Info("Unregistering framework...")
+func (m *MesosLib) UnRegisterFramework() error {
+	m.Log.WithFields(logrus.Fields{"master": m.master}).Info("Unregistering framework...")
 
-	callType := mesosproto.Call_UNREGISTER
-	unRegisterCall := mesosproto.Call{
-		Type:          &callType,
-		FrameworkInfo: frameworkInfo,
-	}
-	return m.send(&unRegisterCall, "mesos.internal.UnRegisterFrameworkMessage")
+	return m.send(&mesosproto.UnregisterFrameworkMessage{
+		FrameworkId: m.frameworkInfo.Id,
+	}, "mesos.internal.UnRegisterFrameworkMessage")
 }

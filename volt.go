@@ -29,10 +29,10 @@ func main() {
 	}
 
 	// initialize MesosLib
-	m := mesoslib.NewMesosLib(*master, log)
+	m := mesoslib.NewMesosLib(*master, log, frameworkInfo)
 
 	// try to register against the master
-	if err := m.RegisterFramework(frameworkInfo); err != nil {
+	if err := m.RegisterFramework(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -40,15 +40,14 @@ func main() {
 	event := <-m.GetEvent(mesosproto.Event_REGISTERED)
 
 	log.WithFields(logrus.Fields{"FrameworkId": *event.Registered.FrameworkId.Value}).Info("Registration successful.")
-	frameworkInfo.Id = event.Registered.FrameworkId
 
 	// once we are registered, start the API
-	if err := api.NewAPI(m, frameworkInfo, log).ListenAndServe(*port); err != nil {
+	if err := api.NewAPI(m).ListenAndServe(*port); err != nil {
 		log.Fatal(err)
 	}
 
 	//TODO catch signal to unregister cleanly
-	if err := m.UnRegisterFramework(frameworkInfo); err != nil {
+	if err := m.UnRegisterFramework(); err != nil {
 		log.Fatal(err)
 	}
 }

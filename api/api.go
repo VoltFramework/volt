@@ -11,24 +11,20 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesoslib"
-	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/gorilla/mux"
 )
 
 type API struct {
-	frameworkInfo *mesosproto.FrameworkInfo
-	m             *mesoslib.MesosLib
-	log           *logrus.Logger
+	m   *mesoslib.MesosLib
+	log *logrus.Logger
 
 	tasks []Task
 }
 
-func NewAPI(m *mesoslib.MesosLib, frameworkInfo *mesosproto.FrameworkInfo, log *logrus.Logger) *API {
+func NewAPI(m *mesoslib.MesosLib) *API {
 	return &API{
-		frameworkInfo: frameworkInfo,
-		log:           log,
-		m:             m,
-		tasks:         []Task{},
+		m:     m,
+		tasks: []Task{},
 	}
 }
 
@@ -48,7 +44,7 @@ type Task struct {
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		api.log.Warn(err)
+		api.m.Log.Warn(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -56,7 +52,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	var task Task
 	err = json.Unmarshal(body, &task)
 	if err != nil {
-		api.log.Warn(err)
+		api.m.Log.Warn(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -64,19 +60,19 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	id := make([]byte, 6)
 	n, err := rand.Read(id)
 	if n != len(id) || err != nil {
-		api.log.Warn(err)
+		api.m.Log.Warn(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	task.ID = hex.EncodeToString(id)
 
 	go func() {
-		offer, err := api.m.RequestOffer(api.frameworkInfo, task.Cpus, task.Mem)
+		offer, err := api.m.RequestOffer(task.Cpus, task.Mem)
 		if err != nil {
-			api.log.Warn(err)
+			api.m.Log.Warn(err)
 		}
 		if offer != nil {
-			api.m.LaunchTask(api.frameworkInfo, offer, task.Command, task.ID)
+			api.m.LaunchTask(offer, task.Command, task.ID)
 		}
 	}()
 
@@ -103,7 +99,7 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 // Register all the routes and then serve the API
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
-	api.log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
+	api.m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"GET": {
@@ -121,9 +117,9 @@ func (api *API) ListenAndServe(port int) error {
 			_fct := fct
 			_method := method
 
-			api.log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
+			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
 			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				api.log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
+				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
 				_fct(w, r)
 			})
 		}

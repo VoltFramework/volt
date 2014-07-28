@@ -5,8 +5,8 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, mem float64) (*mesosproto.Offer, error) {
-	m.log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem}).Info("Requesting offers...")
+func (m *MesosLib) RequestOffer(cpus, mem float64) (*mesosproto.Offer, error) {
+	m.Log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem}).Info("Requesting offers...")
 
 	var event *mesosproto.Event
 
@@ -15,39 +15,33 @@ func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, m
 	}
 
 	if event == nil {
-		callType := mesosproto.Call_REQUEST
 		cpusName := "cpus"
 		memoryName := "memory"
 		scalar := mesosproto.Value_SCALAR
 
-		requestCall := &mesosproto.Call{
-			FrameworkInfo: frameworkInfo,
-			Type:          &callType,
-			Request: &mesosproto.Call_Request{
-				Requests: []*mesosproto.Request{
-					&mesosproto.Request{
-						Resources: []*mesosproto.Resource{
-							&mesosproto.Resource{
-								Name: &cpusName,
-								Type: &scalar,
-								Scalar: &mesosproto.Value_Scalar{
-									Value: &cpus,
-								},
+		if err := m.send(&mesosproto.ResourceRequestMessage{
+			FrameworkId: m.frameworkInfo.Id,
+			Requests: []*mesosproto.Request{
+				&mesosproto.Request{
+					Resources: []*mesosproto.Resource{
+						&mesosproto.Resource{
+							Name: &cpusName,
+							Type: &scalar,
+							Scalar: &mesosproto.Value_Scalar{
+								Value: &cpus,
 							},
-							&mesosproto.Resource{
-								Name: &memoryName,
-								Type: &scalar,
-								Scalar: &mesosproto.Value_Scalar{
-									Value: &mem,
-								},
+						},
+						&mesosproto.Resource{
+							Name: &memoryName,
+							Type: &scalar,
+							Scalar: &mesosproto.Value_Scalar{
+								Value: &mem,
 							},
 						},
 					},
 				},
 			},
-		}
-
-		if err := m.send(requestCall, "mesos.internal.ResourceRequestMessage"); err != nil {
+		}, "mesos.internal.ResourceRequestMessage"); err != nil {
 			return nil, err
 		}
 
@@ -55,7 +49,7 @@ func (m *MesosLib) RequestOffer(frameworkInfo *mesosproto.FrameworkInfo, cpus, m
 	}
 
 	if len(event.Offers.Offers) > 0 {
-		m.log.WithFields(logrus.Fields{"Id": event.Offers.Offers[0].Id}).Info("Received offer.")
+		m.Log.WithFields(logrus.Fields{"Id": event.Offers.Offers[0].Id}).Info("Received offer.")
 		return event.Offers.Offers[0], nil
 	}
 	return nil, nil

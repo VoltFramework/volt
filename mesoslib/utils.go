@@ -6,11 +6,10 @@ import (
 	"net/http"
 
 	"code.google.com/p/goprotobuf/proto"
-	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) send(call *mesosproto.Call, path string) error {
-	data, err := proto.Marshal(call)
+func (m *MesosLib) send(msg proto.Message, path string) error {
+	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}

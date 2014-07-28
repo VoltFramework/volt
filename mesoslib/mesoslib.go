@@ -10,22 +10,25 @@ import (
 )
 
 type MesosLib struct {
-	master string
-	log    *logrus.Logger
-	ip     string
-	port   int
+	master        string
+	Log           *logrus.Logger
+	ip            string
+	port          int
+	frameworkInfo *mesosproto.FrameworkInfo
 
 	events events
 }
 
-func NewMesosLib(master string, log *logrus.Logger) *MesosLib {
+func NewMesosLib(master string, log *logrus.Logger, frameworkInfo *mesosproto.FrameworkInfo) *MesosLib {
 	m := &MesosLib{
-		log:    log,
-		master: master,
-		port:   9091,
+		Log:           log,
+		master:        master,
+		port:          9091,
+		frameworkInfo: frameworkInfo,
 		events: events{
 			mesosproto.Event_REGISTERED: make(chan *mesosproto.Event),
 			mesosproto.Event_OFFERS:     make(chan *mesosproto.Event),
+			mesosproto.Event_UPDATE:     make(chan *mesosproto.Event),
 		},
 	}
 
