@@ -11,6 +11,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesoslib"
+	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/gorilla/mux"
 )
 
@@ -18,13 +19,13 @@ type API struct {
 	m   *mesoslib.MesosLib
 	log *logrus.Logger
 
-	tasks []Task
+	tasks []*Task
 }
 
 func NewAPI(m *mesoslib.MesosLib) *API {
 	return &API{
 		m:     m,
-		tasks: []Task{},
+		tasks: make([]*Task, 0),
 	}
 }
 
@@ -33,11 +34,15 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
 }
 
+var defaultState mesosproto.TaskState = mesosproto.TaskState_TASK_STAGING
+
 type Task struct {
 	ID      string  `json:"id"`
 	Command string  `json:"cmd"`
 	Cpus    float64 `json:"cpus,string"`
 	Mem     float64 `json:"mem,string"`
+
+	State *mesosproto.TaskState `json:"state,string"`
 }
 
 // Enpoint to call to add a new task
@@ -49,7 +54,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	var task Task
+	var task = Task{State: &defaultState}
 	err = json.Unmarshal(body, &task)
 	if err != nil {
 		api.m.Log.Warn(err)
@@ -72,11 +77,11 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 			api.m.Log.Warn(err)
 		}
 		if offer != nil {
-			api.m.LaunchTask(offer, task.Command, task.ID)
+			api.m.LaunchTask(offer, task.Command, task.ID, &task.State)
 		}
 	}()
 
-	api.tasks = append(api.tasks, task)
+	api.tasks = append(api.tasks, &task)
 	io.WriteString(w, "OK")
 }
 
@@ -85,8 +90,8 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	data := struct {
-		Size  int    `json:"size"`
-		Tasks []Task `json:"tasks"`
+		Size  int     `json:"size"`
+		Tasks []*Task `json:"tasks"`
 	}{
 		len(api.tasks),
 		api.tasks,
