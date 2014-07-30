@@ -14,9 +14,9 @@ func main() {
 		port          = flag.Int([]string{"p", "-port"}, 8080, "Port to listen on for the API")
 		master        = flag.String([]string{"m", "-master"}, "localhost:5050", "Master to connect to")
 		debug         = flag.Bool([]string{"D", "-debug"}, false, "")
+		user          = flag.String([]string{"u", "-user"}, "bin", "User to execute tasks as")
 		frameworkName = "volt"
-		user          = ""
-		frameworkInfo = &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
+		frameworkInfo = &mesosproto.FrameworkInfo{Name: &frameworkName, User: user}
 	)
 
 	flag.Parse()
