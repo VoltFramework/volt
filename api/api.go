@@ -79,7 +79,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		}
 		if offer != nil {
 			task.SlaveId = offer.SlaveId.Value
-			api.m.LaunchTask(offer, task.Command, task.ID, &task.State)
+			api.m.LaunchTask(offer, task.Command, task.ID, task.State)
 		}
 	}()
 

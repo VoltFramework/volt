@@ -5,7 +5,7 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state **mesosproto.TaskState) error {
+func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state *mesosproto.TaskState) error {
 	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id}).Info("Launching task...")
 
 	if err := m.send(&mesosproto.LaunchTasksMessage{
@@ -33,7 +33,7 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state
 
 	for {
 		event := <-m.GetEvent(mesosproto.Event_UPDATE)
-		*state = event.Update.Status.State
+		*state = *event.Update.Status.State
 		switch *event.Update.Status.State {
 		case mesosproto.TaskState_TASK_STARTING:
 			m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is starting.")

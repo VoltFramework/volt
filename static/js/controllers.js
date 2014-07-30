@@ -3,8 +3,8 @@ var voltControllers = angular.module('voltControllers', []);
 voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', function ($scope, Tasks, $interval) {
   $scope.refreshInterval = 5;
   $interval(function() {
-      var update = Tasks.query(function() {
-          $scope.tasks = update;
+      Tasks.query(function(d) {
+          $scope.tasks = d;
       });
   }, $scope.refreshInterval * 1000);
   $scope.tasks = Tasks.query();
