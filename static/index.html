@@ -75,9 +75,9 @@
     <div class="container" style="margin-top:100px" ng-controller="Tasks">
 
         <table class="table table-striped">
-            <thead><tr><th>ID</th><th>CPUs</th><th>MEM</th><th>Command</th><th>State</th></tr></thead>
+            <thead><tr><th>ID</th><th>CPUs</th><th>MEM</th><th>Command</th><th>SlaveID</th><th>State</th></tr></thead>
             <tbody>
-                <tr ng-repeat="task in tasks"><td>{{task.id}}</td><td>{{task.cpus}}</td><td>{{task.mem}}</td><td>{{task.cmd}}</td><td><b>{{task.state}}</b></td></tr>
+                <tr ng-repeat="task in tasks"><td>{{task.id}}</td><td>{{task.cpus}}</td><td>{{task.mem}}</td><td>{{task.cmd}}</td><td>{{task.slave_id}}</td><td><b>{{task.state}}</b></td></tr>
             </tbody>
   
 </table>

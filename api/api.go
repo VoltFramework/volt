@@ -42,7 +42,8 @@ type Task struct {
 	Cpus    float64 `json:"cpus,string"`
 	Mem     float64 `json:"mem,string"`
 
-	State *mesosproto.TaskState `json:"state,string"`
+	SlaveId *string               `json:"slave_id",string`
+	State   *mesosproto.TaskState `json:"state,string"`
 }
 
 // Enpoint to call to add a new task
@@ -77,6 +78,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 			api.m.Log.Warn(err)
 		}
 		if offer != nil {
+			task.SlaveId = offer.SlaveId.Value
 			api.m.LaunchTask(offer, task.Command, task.ID, &task.State)
 		}
 	}()
