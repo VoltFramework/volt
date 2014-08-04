@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
@@ -46,51 +45,64 @@ type Task struct {
 	State   *mesosproto.TaskState `json:"state,string"`
 }
 
+func (api *API) writeError(w http.ResponseWriter, code int, message string) {
+	api.m.Log.Warn(message)
+	w.WriteHeader(code)
+	io.WriteString(w, message)
+}
+
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		api.m.Log.Warn(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 	defer r.Body.Close()
 	var task = Task{State: &defaultState}
-	err = json.Unmarshal(body, &task)
-	if err != nil {
-		api.m.Log.Warn(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
+		api.writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id := make([]byte, 6)
 	n, err := rand.Read(id)
 	if n != len(id) || err != nil {
-		api.m.Log.Warn(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	task.ID = hex.EncodeToString(id)
+	api.tasks = append(api.tasks, &task)
 
-	go func() {
+	f := func() error {
 		offer, err := api.m.RequestOffer(task.Cpus, task.Mem)
 		if err != nil {
-			api.m.Log.Warn(err)
+			return err
 		}
 		if offer != nil {
 			task.SlaveId = offer.SlaveId.Value
-			api.m.LaunchTask(offer, task.Command+" > volt_stdout 2> volt_stderr", task.ID, task.State)
+			return api.m.LaunchTask(offer, task.Command+" > volt_stdout 2> volt_stderr", task.ID, task.State)
 		}
-	}()
-
-	api.tasks = append(api.tasks, &task)
-	io.WriteString(w, "OK")
+		return fmt.Errorf("No offer available")
+	}
+	if r.Form.Get("with_result") == "true" {
+		if err := f(); err != nil {
+			api.writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		files, err := api.m.ReadFile(task.ID, "volt_stdout", "volt_stderr")
+		if err != nil {
+			api.writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(files); err != nil {
+			api.writeError(w, http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		go f()
+		w.WriteHeader(http.StatusAccepted)
+		io.WriteString(w, "OK")
+	}
 }
 
 // Endpoint to list all the tasks
 func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	data := struct {
 		Size  int     `json:"size"`
 		Tasks []*Task `json:"tasks"`
@@ -98,8 +110,9 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 		len(api.tasks),
 		api.tasks,
 	}
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(&data); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		api.writeError(w, http.StatusInternalServerError, err.Error())
 	}
 }
 
@@ -127,7 +140,11 @@ func (api *API) ListenAndServe(port int) error {
 			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
 			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
-				_fct(w, r)
+				if err := r.ParseForm(); err != nil {
+					api.writeError(w, http.StatusBadRequest, err.Error())
+				} else {
+					_fct(w, r)
+				}
 			})
 		}
 	}
