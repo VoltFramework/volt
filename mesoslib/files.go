@@ -2,6 +2,7 @@ package mesoslib
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -181,6 +182,9 @@ func (m *MesosLib) ReadFile(taskId string, filenames ...string) (map[string]stri
 	slavePid, executorId, err := m.getSlavePidAndExecutorId(taskId)
 	if err != nil {
 		return nil, err
+	}
+	if slavePid == "" {
+		return nil, fmt.Errorf("cannot get slave PID")
 	}
 	if executorId == "" {
 		executorId = taskId

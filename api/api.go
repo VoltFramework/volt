@@ -117,6 +117,26 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
+	var (
+		vars = mux.Vars(r)
+		id   = vars["id"]
+		file = vars["file"]
+	)
+
+	files, err := api.m.ReadFile(id, []string{file}...)
+	if err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	content, ok := files[file]
+	if !ok {
+		api.writeError(w, http.StatusNotFound, file+" not found")
+		return
+	}
+	io.WriteString(w, content)
+}
+
 // Register all the routes and then serve the API
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
@@ -124,8 +144,9 @@ func (api *API) ListenAndServe(port int) error {
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"GET": {
-			"/_ping": api._ping,
-			"/tasks": api.tasksList,
+			"/_ping":                 api._ping,
+			"/task/{id}/file/{file}": api.getFile,
+			"/tasks":                 api.tasksList,
 		},
 		"POST": {
 			"/tasks": api.tasksAdd,
