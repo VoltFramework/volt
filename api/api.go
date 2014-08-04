@@ -36,10 +36,11 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 var defaultState mesosproto.TaskState = mesosproto.TaskState_TASK_STAGING
 
 type Task struct {
-	ID      string  `json:"id"`
-	Command string  `json:"cmd"`
-	Cpus    float64 `json:"cpus,string"`
-	Mem     float64 `json:"mem,string"`
+	ID      string   `json:"id"`
+	Command string   `json:"cmd"`
+	Cpus    float64  `json:"cpus,string"`
+	Mem     float64  `json:"mem,string"`
+	Files   []string `json:"files"`
 
 	SlaveId *string               `json:"slave_id",string`
 	State   *mesosproto.TaskState `json:"state,string"`
@@ -80,12 +81,12 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		}
 		return fmt.Errorf("No offer available")
 	}
-	if r.Form.Get("with_result") == "true" {
+	if len(task.Files) > 0 {
 		if err := f(); err != nil {
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		files, err := api.m.ReadFile(task.ID, "volt_stdout", "volt_stderr")
+		files, err := api.m.ReadFile(task.ID, task.Files...)
 		if err != nil {
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -140,11 +141,7 @@ func (api *API) ListenAndServe(port int) error {
 			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
 			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
-				if err := r.ParseForm(); err != nil {
-					api.writeError(w, http.StatusBadRequest, err.Error())
-				} else {
-					_fct(w, r)
-				}
+				_fct(w, r)
 			})
 		}
 	}
