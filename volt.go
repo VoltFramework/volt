@@ -15,6 +15,7 @@ func main() {
 		master        = flag.String([]string{"m", "-master"}, "localhost:5050", "Master to connect to")
 		debug         = flag.Bool([]string{"D", "-debug"}, false, "")
 		user          = flag.String([]string{"u", "-user"}, "bin", "User to execute tasks as")
+		ip            = flag.String([]string{"-ip"}, "", "IP address to listen on [default: autodetect]")
 		frameworkName = "volt"
 		frameworkInfo = &mesosproto.FrameworkInfo{Name: &frameworkName, User: user}
 	)
@@ -26,7 +27,7 @@ func main() {
 	}
 
 	// initialize MesosLib
-	m := mesoslib.NewMesosLib(*master, log, frameworkInfo)
+	m := mesoslib.NewMesosLib(*master, log, frameworkInfo, *ip)
 
 	// try to register against the master
 	if err := m.RegisterFramework(); err != nil {
