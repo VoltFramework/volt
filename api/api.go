@@ -49,7 +49,17 @@ type Task struct {
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 	api.m.Log.Warn(message)
 	w.WriteHeader(code)
-	io.WriteString(w, message)
+	data := struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}{
+		code,
+		message,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(&data); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+	}
 }
 
 // Enpoint to call to add a new task
