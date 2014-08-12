@@ -11,6 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
 
@@ -178,6 +179,6 @@ func (api *API) ListenAndServe(port int) error {
 			})
 		}
 	}
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
+	r.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
