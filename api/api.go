@@ -33,8 +33,6 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
 }
 
-var defaultState mesosproto.TaskState = mesosproto.TaskState_TASK_STAGING
-
 type Task struct {
 	ID      string   `json:"id"`
 	Command string   `json:"cmd"`
@@ -65,7 +63,11 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var task = Task{State: &defaultState}
+	var (
+		defaultState mesosproto.TaskState = mesosproto.TaskState_TASK_STAGING
+		task                              = Task{State: &defaultState}
+	)
+
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		api.writeError(w, http.StatusBadRequest, err.Error())
 		return
