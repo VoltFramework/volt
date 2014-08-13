@@ -42,3 +42,32 @@ var ModalCtrl = function ($scope, $modalInstance, $http, task) {
         $modalInstance.dismiss('cancel');
     };
 };
+
+voltControllers.controller('File', function ($scope, $modal, $http) {
+  $scope.file = {};
+    $scope.open = function (name, id, size) {
+	$scope.file.name = name;
+	$http.get('/task/'+id+'/file/volt_'+name).
+	    success(function(data, status, headers, config) {
+		    $scope.file.content= data;
+	    }).
+	    error(function(data, status, headers, config) {
+		    $scope.file.content= 'error';
+	    });
+    var modalInstance = $modal.open({
+      templateUrl: 'file.html',
+      controller:  FileCtrl,
+      size: size,
+      resolve: {file: function() {return $scope.file;}
+    }
+    });
+  };
+});
+
+var FileCtrl = function ($scope, $modalInstance, $http,file) {
+    $scope.file = file;
+    
+    $scope.close = function () {
+        $modalInstance.dismiss('close');
+    };
+};

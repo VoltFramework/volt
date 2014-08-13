@@ -39,13 +39,25 @@
         </form>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="send()">SEND</button>
-            <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+            <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+            <button class="btn btn-primary" ng-click="send()">SEND</button>
+        </div>
+    </script>
+
+      <script type="text/ng-template" id="file.html">
+        <div class="modal-header">
+            <h3 class="modal-title" >{{file.name}}</h3>
+        </div>
+        <div class="modal-body">
+	  <pre>{{file.content}}</pre>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" ng-click="close()">Close</button>
         </div>
     </script>
 
 
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation" style="height:48px">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -54,11 +66,11 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#"><img style="margin-top: -6px;" src="img/logo.png" alt="volt"></a>
+          <a class="navbar-brand" href="#"><img style="margin-top: -9px;" src="img/logo.png" alt="volt"></a>
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-right" ng-controller="Modal">
-            <li><button style="max-width:100px; margin-top: 9px;" class="btn btn-success btn-sm" ng-click="open()">Add task</button></li>
+            <li><button style="max-width:100px; margin-top: 10px;" class="btn btn-primary btn-sm" ng-click="open()">Add task</button></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -69,9 +81,8 @@
         <table class="table table-striped">
             <thead><tr><th>ID</th><th>CPUs</th><th>MEM</th><th>Command</th><th>SlaveID</th><th>State</th><th>OUTPUTS</th></tr></thead>
             <tbody>
-                <tr ng-repeat="task in tasks" class="{{task.class}}"><td>{{task.id}}</td><td>{{task.cpus}}</td><td>{{task.mem}}</td><td>{{task.cmd}}</td><td>{{task.slave_id}}</td><td><b>{{task.state}}</b></td><td><span class="label label-success"><a href="/task/{{task.id}}/file/volt_stdout" style="color: #fff !important">stdout</a></span> <span class="label label-primary"><a href="/task/{{task.id}}/file/volt_stderr" style="color: #fff !important">stderr</a></span></td></tr>
+                <tr ng-repeat="task in tasks" class="{{task.class}} disabled"><td>{{task.id}}</td><td>{{task.cpus}}</td><td>{{task.mem}}</td><td>{{task.cmd}}</td><td>{{task.slave_id}}</td><td><b>{{task.state}}</b></td><td><span class="label label-primary" ng-controller="File"><a href="#" ng-click="open('stdout', task.id, 'lg')" style="color: #fff !important">stdout</a></span> <span class="label label-primary" ng-controller="File"><a href="#" ng-click="open('stderr', task.id, 'lg')" style="color: #fff !important">stderr</a></span></td></tr>
             </tbody>
-  
 </table>
      
     </div><!-- /.container -->
