@@ -5,7 +5,9 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state *mesosproto.TaskState) error {
+var none = 0.0
+
+func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, command, ID string, state *mesosproto.TaskState) error {
 	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id}).Info("Launching task...")
 
 	if err := m.send(&mesosproto.LaunchTasksMessage{
@@ -17,7 +19,7 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state
 					Value: &ID,
 				},
 				SlaveId:   offer.SlaveId,
-				Resources: offer.Resources,
+				Resources: resources,
 				Command: &mesosproto.CommandInfo{
 					Value: &command,
 				},
@@ -26,7 +28,7 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, command, ID string, state
 		OfferIds: []*mesosproto.OfferID{
 			offer.Id,
 		},
-		Filters: &mesosproto.Filters{},
+		Filters: &mesosproto.Filters{RefuseSeconds: &none},
 	}, "mesos.internal.LaunchTasksMessage"); err != nil {
 		return err
 	}

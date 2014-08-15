@@ -84,13 +84,13 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	api.tasks = append(api.tasks, &task)
 
 	f := func() error {
-		offer, err := api.m.RequestOffer(task.Cpus, task.Mem)
+		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem)
 		if err != nil {
 			return err
 		}
 		if offer != nil {
 			task.SlaveId = offer.SlaveId.Value
-			return api.m.LaunchTask(offer, task.Command+" > volt_stdout 2> volt_stderr", task.ID, task.State)
+			return api.m.LaunchTask(offer, resources, task.Command+" > volt_stdout 2> volt_stderr", task.ID, task.State)
 		}
 		return fmt.Errorf("No offer available")
 	}
