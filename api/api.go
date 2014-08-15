@@ -19,13 +19,15 @@ type API struct {
 	m   *mesoslib.MesosLib
 	log *logrus.Logger
 
-	tasks []*Task
+	tasks    []*Task
+	statuses map[string]*mesosproto.TaskState
 }
 
 func NewAPI(m *mesoslib.MesosLib) *API {
 	return &API{
-		m:     m,
-		tasks: make([]*Task, 0),
+		m:        m,
+		tasks:    make([]*Task, 0),
+		statuses: make(map[string]*mesosproto.TaskState, 0),
 	}
 }
 
@@ -82,6 +84,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	task.ID = hex.EncodeToString(id)
 	api.tasks = append(api.tasks, &task)
+	api.statuses[task.ID] = task.State
 
 	f := func() error {
 		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem)
@@ -90,7 +93,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		}
 		if offer != nil {
 			task.SlaveId = offer.SlaveId.Value
-			return api.m.LaunchTask(offer, resources, task.Command+" > volt_stdout 2> volt_stderr", task.ID, task.State)
+			return api.m.LaunchTask(offer, resources, task.Command+" > volt_stdout 2> volt_stderr", task.ID)
 		}
 		return fmt.Errorf("No offer available")
 	}
@@ -150,6 +153,37 @@ func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, content)
 }
 
+func (api *API) handleStatuses() {
+	for {
+		event := <-api.m.GetEvent(mesosproto.Event_UPDATE)
+		ID := event.Update.Status.TaskId.GetValue()
+
+		state, ok := api.statuses[ID]
+		if !ok {
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
+			continue
+		}
+
+		*state = *event.Update.Status.State
+		switch *event.Update.Status.State {
+		case mesosproto.TaskState_TASK_STAGING:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task was registered.")
+		case mesosproto.TaskState_TASK_STARTING:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is starting.")
+		case mesosproto.TaskState_TASK_RUNNING:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is running.")
+		case mesosproto.TaskState_TASK_FINISHED:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is finished.")
+		case mesosproto.TaskState_TASK_FAILED:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task has failed.")
+		case mesosproto.TaskState_TASK_KILLED:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was killed.")
+		case mesosproto.TaskState_TASK_LOST:
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was lost.")
+		}
+	}
+}
+
 // Register all the routes and then serve the API
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
@@ -180,5 +214,6 @@ func (api *API) ListenAndServe(port int) error {
 		}
 	}
 	r.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
+	go api.handleStatuses()
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
