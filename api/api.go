@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesoslib"
@@ -16,18 +17,20 @@ import (
 )
 
 type API struct {
+	sync.RWMutex
+
 	m   *mesoslib.MesosLib
 	log *logrus.Logger
 
-	tasks    []*Task
-	statuses map[string]*mesosproto.TaskState
+	tasks  []*Task
+	states map[string]*mesosproto.TaskState
 }
 
 func NewAPI(m *mesoslib.MesosLib) *API {
 	return &API{
-		m:        m,
-		tasks:    make([]*Task, 0),
-		statuses: make(map[string]*mesosproto.TaskState, 0),
+		m:      m,
+		tasks:  make([]*Task, 0),
+		states: make(map[string]*mesosproto.TaskState, 0),
 	}
 }
 
@@ -83,8 +86,10 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task.ID = hex.EncodeToString(id)
+	api.Lock()
 	api.tasks = append(api.tasks, &task)
-	api.statuses[task.ID] = task.State
+	api.states[task.ID] = task.State
+	api.Unlock()
 
 	f := func() error {
 		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem)
@@ -120,6 +125,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 // Endpoint to list all the tasks
 func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
+	api.RLock()
 	data := struct {
 		Size  int     `json:"size"`
 		Tasks []*Task `json:"tasks"`
@@ -127,10 +133,33 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 		len(api.tasks),
 		api.tasks,
 	}
+	api.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(&data); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 	}
+}
+
+// Endpoint to delete a task
+func (api *API) taskDelete(w http.ResponseWriter, r *http.Request) {
+	var (
+		vars   = mux.Vars(r)
+		id     = vars["id"]
+		tasks  = make([]*Task, len(api.tasks)-1)
+		states = make(map[string]*mesosproto.TaskState, len(api.states)-1)
+	)
+
+	api.Lock()
+	for _, task := range api.tasks {
+		if task != nil && task.ID != id {
+			tasks = append(tasks, task)
+			states[task.ID] = task.State
+		}
+	}
+	api.tasks = tasks
+	api.states = states
+	api.Unlock()
+	io.WriteString(w, "OK")
 }
 
 func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
@@ -153,12 +182,12 @@ func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, content)
 }
 
-func (api *API) handleStatuses() {
+func (api *API) handleStates() {
 	for {
 		event := <-api.m.GetEvent(mesosproto.Event_UPDATE)
 		ID := event.Update.Status.TaskId.GetValue()
 
-		state, ok := api.statuses[ID]
+		state, ok := api.states[ID]
 		if !ok {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
 			continue
@@ -190,6 +219,9 @@ func (api *API) ListenAndServe(port int) error {
 	api.m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
+		"DELETE": {
+			"/task/{id}": api.taskDelete,
+		},
 		"GET": {
 			"/_ping":                 api._ping,
 			"/task/{id}/file/{file}": api.getFile,
@@ -214,6 +246,6 @@ func (api *API) ListenAndServe(port int) error {
 		}
 	}
 	r.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
-	go api.handleStatuses()
+	go api.handleStates()
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
