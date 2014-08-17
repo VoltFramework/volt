@@ -79,9 +79,44 @@
     <div class="container" style="margin-top:100px" ng-controller="Tasks">
 
         <table class="table table-striped">
-            <thead><tr><th>ID</th><th>CPUs</th><th>MEM</th><th>Command</th><th>SlaveID</th><th>State</th><th>OUTPUTS</th></tr></thead>
+            <thead>
+	      <tr>
+		<th>ID</th>
+		<th>CPUs</th>
+		<th>MEM</th>
+		<th>Command</th>
+		<th>SlaveID</th>
+		<th>State</th>
+		<th>OUTPUTS</th>
+	    </tr>
+	    </thead>
             <tbody>
-                <tr ng-repeat="task in tasks" class="{{task.class}} disabled"><td>{{task.id}}</td><td>{{task.cpus}}</td><td>{{task.mem}}</td><td>{{task.cmd}}</td><td>{{task.slave_id}}</td><td><b>{{task.state}}</b></td><td><span class="label label-primary" ng-controller="File"><a href="#" ng-click="open('stdout', task.id, 'lg')" style="color: #fff !important">stdout</a></span> <span class="label label-primary" ng-controller="File"><a href="#" ng-click="open('stderr', task.id, 'lg')" style="color: #fff !important">stderr</a></span></td></tr>
+                <tr ng-repeat="task in tasks" class="{{task.class}} disabled">
+		  <td>{{task.id}}</td>
+		  <td>{{task.cpus}}</td>
+		  <td>{{task.mem}}</td>
+		  <td>{{task.cmd}}</td>
+		  <td>{{task.slave_id}}</td>
+		  <td><b>{{task.state}}</b></td>
+		  <td>
+		    <span class="label label-primary" ng-controller="File">
+		      <a href="#" ng-click="open('stdout', task.id, 'lg')" style="color: #fff !important">stdout</a>
+		    </span>
+		    &nbsp;
+		    <span class="label label-primary" ng-controller="File">
+		      <a href="#" ng-click="open('stderr', task.id, 'lg')" style="color: #fff !important">stderr</a>
+		  </span>
+		  </td>
+		  <td>
+		    <a href="#" ng-click="kill(task.id)">
+		      <span class="glyphicon glyphicon-remove"/>
+		    </a>
+		    &nbsp;
+		    <a href="#" ng-click="trash(task.id)">
+		      <span class="glyphicon glyphicon-trash"/>
+		</a>
+		</td>
+		</tr>
             </tbody>
 </table>
      

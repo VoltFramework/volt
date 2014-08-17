@@ -29,3 +29,13 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.R
 		Filters: &mesosproto.Filters{},
 	}, "mesos.internal.LaunchTasksMessage")
 }
+
+func (m *MesosLib) KillTask(ID string) error {
+	m.Log.WithFields(logrus.Fields{"ID": ID}).Info("Killing task...")
+	return m.send(&mesosproto.KillTaskMessage{
+		FrameworkId: m.frameworkInfo.Id,
+		TaskId: &mesosproto.TaskID{
+			Value: &ID,
+		},
+	}, "mesos.internal.KillTaskMessage")
+}

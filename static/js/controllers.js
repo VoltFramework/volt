@@ -1,6 +1,6 @@
 var voltControllers = angular.module('voltControllers', []);
 
-voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', function ($scope, Tasks, $interval) {
+voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', function ($scope, Tasks, $interval, $http) {
   $scope.refreshInterval = 5;
   $interval(function() {
       Tasks.query(function(d) {
@@ -8,6 +8,13 @@ voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', function ($
       });
   }, $scope.refreshInterval * 1000);
   $scope.tasks = Tasks.query();
+
+    $scope.trash = function (id) {
+      $http({method: 'DELETE', url: '/tasks/'+id}).success(function(data) {});
+    };
+    $scope.kill = function (id) {
+      $http({method: 'PUT', url: '/tasks/'+id+'/kill'}).success(function(data) {});
+    };
 }]);
 
 
@@ -47,7 +54,7 @@ voltControllers.controller('File', function ($scope, $modal, $http) {
   $scope.file = {};
     $scope.open = function (name, id, size) {
 	$scope.file.name = name;
-	$http.get('/task/'+id+'/file/volt_'+name).
+	$http.get('/tasks/'+id+'/file/volt_'+name).
 	    success(function(data, status, headers, config) {
 		    $scope.file.content= data;
 	    }).

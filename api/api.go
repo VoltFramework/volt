@@ -141,11 +141,11 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 }
 
 // Endpoint to delete a task
-func (api *API) taskDelete(w http.ResponseWriter, r *http.Request) {
+func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
 	var (
 		vars   = mux.Vars(r)
 		id     = vars["id"]
-		tasks  = make([]*Task, len(api.tasks)-1)
+		tasks  = make([]*Task, 0)
 		states = make(map[string]*mesosproto.TaskState, len(api.states)-1)
 	)
 
@@ -160,6 +160,19 @@ func (api *API) taskDelete(w http.ResponseWriter, r *http.Request) {
 	api.states = states
 	api.Unlock()
 	io.WriteString(w, "OK")
+}
+
+// Endpoint to kill a task
+func (api *API) tasksKill(w http.ResponseWriter, r *http.Request) {
+	var (
+		vars = mux.Vars(r)
+		id   = vars["id"]
+	)
+	if err := api.m.KillTask(id); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+	} else {
+		io.WriteString(w, "OK")
+	}
 }
 
 func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
@@ -220,15 +233,18 @@ func (api *API) ListenAndServe(port int) error {
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"DELETE": {
-			"/task/{id}": api.taskDelete,
+			"/tasks/{id}": api.tasksDelete,
 		},
 		"GET": {
-			"/_ping":                 api._ping,
-			"/task/{id}/file/{file}": api.getFile,
-			"/tasks":                 api.tasksList,
+			"/_ping":                  api._ping,
+			"/tasks/{id}/file/{file}": api.getFile,
+			"/tasks":                  api.tasksList,
 		},
 		"POST": {
 			"/tasks": api.tasksAdd,
+		},
+		"PUT": {
+			"/tasks/{id}/kill": api.tasksKill,
 		},
 	}
 
