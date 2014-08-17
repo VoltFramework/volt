@@ -6,6 +6,9 @@ voltServices.factory('Tasks', function ($resource) {
                             method: 'GET', 
                             isArray: true,
                             transformResponse: function (data, headers) {
+				if (data == '') {
+				    return data;
+				}
                                 var tasks = JSON.parse(data).tasks;
 				for (id in tasks) {
 				    switch (tasks[id].state) {
