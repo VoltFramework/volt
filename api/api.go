@@ -149,6 +149,11 @@ func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
 		states = make(map[string]*mesosproto.TaskState, len(api.states)-1)
 	)
 
+	if err := api.m.KillTask(id); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	api.Lock()
 	for _, task := range api.tasks {
 		if task != nil && task.ID != id {
