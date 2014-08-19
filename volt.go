@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	if *debug {
-		logrus.SetLevel(logrus.DebugLevel)
+		log.Level = logrus.DebugLevel
 	}
 
 	// initialize MesosLib

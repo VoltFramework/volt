@@ -1,6 +1,9 @@
 package mesoslib
 
 import (
+	"fmt"
+
+	"code.google.com/p/goprotobuf/proto"
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
 )
@@ -12,7 +15,7 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.R
 		FrameworkId: m.frameworkInfo.Id,
 		Tasks: []*mesosproto.TaskInfo{
 			&mesosproto.TaskInfo{
-				Name: &command,
+				Name: proto.String(fmt.Sprintf("volt-task-%s", ID)),
 				TaskId: &mesosproto.TaskID{
 					Value: &ID,
 				},
@@ -32,6 +35,7 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.R
 
 func (m *MesosLib) KillTask(ID string) error {
 	m.Log.WithFields(logrus.Fields{"ID": ID}).Info("Killing task...")
+
 	return m.send(&mesosproto.KillTaskMessage{
 		FrameworkId: m.frameworkInfo.Id,
 		TaskId: &mesosproto.TaskID{
