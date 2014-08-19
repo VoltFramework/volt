@@ -27,9 +27,9 @@ func NewMesosLib(master string, log *logrus.Logger, frameworkInfo *mesosproto.Fr
 		frameworkInfo: frameworkInfo,
 		ip:            ip,
 		events: events{
-			mesosproto.Event_REGISTERED: make(chan *mesosproto.Event),
-			mesosproto.Event_OFFERS:     make(chan *mesosproto.Event),
-			mesosproto.Event_UPDATE:     make(chan *mesosproto.Event),
+			mesosproto.Event_REGISTERED: make(chan *mesosproto.Event, 64),
+			mesosproto.Event_OFFERS:     make(chan *mesosproto.Event, 64),
+			mesosproto.Event_UPDATE:     make(chan *mesosproto.Event, 64),
 		},
 	}
 

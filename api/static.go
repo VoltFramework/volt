@@ -16013,15 +16013,19 @@ type _bintree_t struct {
 }
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 	"static": &_bintree_t{nil, map[string]*_bintree_t{
+		"fonts": &_bintree_t{nil, map[string]*_bintree_t{
+			"glyphicons-halflings-regular.ttf": &_bintree_t{static_fonts_glyphicons_halflings_regular_ttf, map[string]*_bintree_t{
+			}},
+			"glyphicons-halflings-regular.eot": &_bintree_t{static_fonts_glyphicons_halflings_regular_eot, map[string]*_bintree_t{
+			}},
+			"glyphicons-halflings-regular.woff": &_bintree_t{static_fonts_glyphicons_halflings_regular_woff, map[string]*_bintree_t{
+			}},
+			"glyphicons-halflings-regular.svg": &_bintree_t{static_fonts_glyphicons_halflings_regular_svg, map[string]*_bintree_t{
+			}},
+		}},
 		"favicon.ico": &_bintree_t{static_favicon_ico, map[string]*_bintree_t{
 		}},
 		"js": &_bintree_t{nil, map[string]*_bintree_t{
-			"angles.js": &_bintree_t{static_js_angles_js, map[string]*_bintree_t{
-			}},
-			"Chart.min.js": &_bintree_t{static_js_chart_min_js, map[string]*_bintree_t{
-			}},
-			"app.js": &_bintree_t{static_js_app_js, map[string]*_bintree_t{
-			}},
 			"angular.min.js": &_bintree_t{static_js_angular_min_js, map[string]*_bintree_t{
 			}},
 			"controllers.js": &_bintree_t{static_js_controllers_js, map[string]*_bintree_t{
@@ -16032,6 +16036,12 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 			}},
 			"angular-resource.min.js": &_bintree_t{static_js_angular_resource_min_js, map[string]*_bintree_t{
 			}},
+			"angles.js": &_bintree_t{static_js_angles_js, map[string]*_bintree_t{
+			}},
+			"Chart.min.js": &_bintree_t{static_js_chart_min_js, map[string]*_bintree_t{
+			}},
+			"app.js": &_bintree_t{static_js_app_js, map[string]*_bintree_t{
+			}},
 		}},
 		"img": &_bintree_t{nil, map[string]*_bintree_t{
 			"logo.png": &_bintree_t{static_img_logo_png, map[string]*_bintree_t{
@@ -16041,16 +16051,6 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 		}},
 		"css": &_bintree_t{nil, map[string]*_bintree_t{
 			"bootstrap.min.css": &_bintree_t{static_css_bootstrap_min_css, map[string]*_bintree_t{
-			}},
-		}},
-		"fonts": &_bintree_t{nil, map[string]*_bintree_t{
-			"glyphicons-halflings-regular.ttf": &_bintree_t{static_fonts_glyphicons_halflings_regular_ttf, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.eot": &_bintree_t{static_fonts_glyphicons_halflings_regular_eot, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.woff": &_bintree_t{static_fonts_glyphicons_halflings_regular_woff, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.svg": &_bintree_t{static_fonts_glyphicons_halflings_regular_svg, map[string]*_bintree_t{
 			}},
 		}},
 	}},
