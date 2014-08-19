@@ -52,15 +52,19 @@ var ModalCtrl = function ($scope, $modalInstance, $http, task) {
 
 voltControllers.controller('File', function ($scope, $modal, $http) {
   $scope.file = {};
-    $scope.open = function (name, id, size) {
-	$scope.file.name = name;
-	$http.get('/tasks/'+id+'/file/volt_'+name).
+    $scope.refresh = function() {
+	$http.get('/tasks/'+$scope.file.id+'/file/volt_'+$scope.file.name).
 	    success(function(data, status, headers, config) {
 		    $scope.file.content= data;
 	    }).
 	    error(function(data, status, headers, config) {
 		    $scope.file.content= 'error';
 	    });
+    };
+    $scope.open = function (name, id, size) {
+	$scope.file.name = name;
+	$scope.file.id = id;
+	$scope.refresh();
     var modalInstance = $modal.open({
       templateUrl: 'file.html',
       controller:  FileCtrl,
@@ -73,7 +77,15 @@ voltControllers.controller('File', function ($scope, $modal, $http) {
 
 var FileCtrl = function ($scope, $modalInstance, $http,file) {
     $scope.file = file;
-    
+      $scope.refresh = function() {
+	$http.get('/tasks/'+$scope.file.id+'/file/volt_'+$scope.file.name).
+	    success(function(data, status, headers, config) {
+		    $scope.file.content= data;
+	    }).
+	    error(function(data, status, headers, config) {
+		    $scope.file.content= 'error';
+	    });
+    };
     $scope.close = function () {
         $modalInstance.dismiss('close');
     };
