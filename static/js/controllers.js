@@ -20,8 +20,9 @@ voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', fu
 
 voltControllers.controller('Modal', function ($scope, $modal, $log) {
   $scope.task = {
-    cpus:'0.5',
-    mem:'512',
+    cpus:'0.1',
+    mem:'32',
+    disk:'0',
     cmd:'/bin/ls'
   }
   $scope.open = function (size) {

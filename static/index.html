@@ -32,6 +32,10 @@
                     <input type="text" class="form-control" ng-model="task.mem" id="inputMEM">
                   </div>
                 <div class="form-group">
+                    <label for="inputDisk">Disk</label>
+                    <input type="text" class="form-control" ng-model="task.disk" id="inputDisk">
+                </div>
+                <div class="form-group">
                     <label for="inputCommand">Command</label>
                     <input type="text" class="form-control" ng-model="task.cmd" id="inputCommand">
                     <p class="help-block">Use absolute path, like /bin/ls</p>
@@ -84,6 +88,7 @@
 	      <tr>
 		<th>ID</th>
 		<th>CPUs</th>
+		<th>Disk</th>
 		<th>MEM</th>
 		<th>Command</th>
 		<th>SlaveID</th>
@@ -95,6 +100,7 @@
                 <tr ng-repeat="task in tasks" class="{{task.class}} disabled">
 		  <td>{{task.id}}</td>
 		  <td>{{task.cpus}}</td>
+                  <td>{{task.disk}}</td>
 		  <td>{{task.mem}}</td>
 		  <td>{{task.cmd}}</td>
 		  <td>{{task.slave_id}}</td>

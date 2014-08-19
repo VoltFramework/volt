@@ -6,8 +6,8 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) RequestOffer(cpus, mem float64) (*mesosproto.Offer, []*mesosproto.Resource, error) {
-	m.Log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem}).Info("Requesting offers...")
+func (m *MesosLib) RequestOffer(cpus, mem, disk float64) (*mesosproto.Offer, []*mesosproto.Resource, error) {
+	m.Log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem, "disk": disk}).Info("Requesting offers...")
 
 	var (
 		resources = []*mesosproto.Resource{
@@ -24,6 +24,14 @@ func (m *MesosLib) RequestOffer(cpus, mem float64) (*mesosproto.Offer, []*mesosp
 		}
 		event *mesosproto.Event
 	)
+
+	if disk > 0 {
+		resources = append(resources, &mesosproto.Resource{
+			Name:   proto.String("disk"),
+			Type:   mesosproto.Value_SCALAR.Enum(),
+			Scalar: &mesosproto.Value_Scalar{Value: &disk},
+		})
+	}
 
 	select {
 	case event = <-m.GetEvent(mesosproto.Event_OFFERS):

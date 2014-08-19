@@ -43,10 +43,11 @@ type Task struct {
 	ID      string   `json:"id"`
 	Command string   `json:"cmd"`
 	Cpus    float64  `json:"cpus,string"`
+	Disk    float64  `json:"disk,string"`
 	Mem     float64  `json:"mem,string"`
 	Files   []string `json:"files"`
 
-	SlaveId *string               `json:"slave_id",string`
+	SlaveId *string               `json:"slave_id,string"`
 	State   *mesosproto.TaskState `json:"state,string"`
 }
 
@@ -92,7 +93,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	api.Unlock()
 
 	f := func() error {
-		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem)
+		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem, task.Disk)
 		if err != nil {
 			return err
 		}
