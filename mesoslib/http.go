@@ -14,7 +14,10 @@ import (
 
 func (m *MesosLib) initAPI() {
 	r := mux.NewRouter()
-
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Warnf("[%s] %s: Not implemented", r.Method, r.RequestURI)
+		w.WriteHeader(http.StatusNotFound)
+	})
 	m.Log.WithFields(logrus.Fields{"port": m.port}).Debug("Starting MesosLib-API...")
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request, data []byte) error{
 		"POST": {
