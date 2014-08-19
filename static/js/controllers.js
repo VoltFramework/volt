@@ -1,4 +1,49 @@
-var voltControllers = angular.module('voltControllers', []);
+var voltControllers = angular.module('voltControllers', ["angles"]);
+
+voltControllers.controller('Charts', ['$scope', 'Metrics', '$interval', '$http', function ($scope, Metrics, $interval, $http) {
+    var f = function(data) {
+	$scope.cpusData = [
+	    {
+		value: data.used_cpus,
+		color:"#FF0000"
+	    },
+	    {
+		value : data.total_cpus-data.used_cpus,
+		color : "#00FF00"
+	    }
+	];
+
+	$scope.diskData = [
+	    {
+		value: data.used_disk,
+		color:"#FF0000"
+	    },
+	    {
+		value : data.total_disk-data.used_disk,
+		color : "#00FF00"
+	    }
+	];
+
+	$scope.memData = [
+	    {
+		value: data.used_mem,
+		color:"#FF0000"
+	    },
+	    {
+		value : data.total_mem-data.used_mem,
+		color : "#00FF00"
+	    }
+	];
+    };
+
+    $interval(function() {Metrics.query(f);}, 5000);
+    Metrics.query(f);
+
+    $scope.options = {
+	animation: false,
+	showTooltips: false
+    };	
+}]);
 
 voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', function ($scope, Tasks, $interval, $http) {
   $scope.refreshInterval = 5;

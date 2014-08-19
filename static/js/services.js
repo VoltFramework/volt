@@ -45,3 +45,12 @@ voltServices.factory('Tasks', function ($resource) {
                         }
     })
 });
+
+voltServices.factory('Metrics', function ($resource) {
+    return $resource('/metrics', {}, {
+                        'query': {
+                            method: 'GET', 
+                            isArray: false
+			}
+    })
+});

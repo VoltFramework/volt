@@ -181,6 +181,18 @@ func (api *API) tasksKill(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (api *API) metrics(w http.ResponseWriter, r *http.Request) {
+	metrics, err := api.m.Metrics()
+	if err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+	}
+}
+
 func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 	var (
 		vars = mux.Vars(r)
@@ -245,6 +257,7 @@ func (api *API) ListenAndServe(port int) error {
 			"/_ping":                  api._ping,
 			"/tasks/{id}/file/{file}": api.getFile,
 			"/tasks":                  api.tasksList,
+			"/metrics":                api.metrics,
 		},
 		"POST": {
 			"/tasks": api.tasksAdd,

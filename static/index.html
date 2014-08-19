@@ -80,7 +80,7 @@
         </div><!--/.nav-collapse -->
       </div>
     </div>
-
+    
     <div class="container" style="margin-top:100px" ng-controller="Tasks">
 
         <table class="table table-striped">
@@ -97,6 +97,23 @@
 	    </tr>
 	    </thead>
             <tbody>
+	      <tr ng-controller="Charts">
+		<td></td>
+		<td>
+		  <canvas piechart  options="options" data="cpusData" width="30" height="30"></canvas>
+		</td>
+		<td>
+		  <canvas piechart  options="options" data="diskData" width="30" height="30"></canvas>
+		</td>
+		<td>
+		  <canvas piechart  options="options" data="memData" width="30" height="30"></canvas>
+		</td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	      </tr>
                 <tr ng-repeat="task in tasks" class="{{task.class}} disabled">
 		  <td>{{task.id}}</td>
 		  <td>{{task.cpus}}</td>
@@ -136,6 +153,8 @@
     <script src="js/angular.min.js"></script>
     <script src="js/angular-resource.min.js"></script>
     <script src="js/ui-bootstrap-tpls-0.11.0.min.js"></script>
+    <script src="js/Chart.min.js"></script>
+    <script src="js/angles.js"></script>
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
     <script src="js/services.js"></script>
