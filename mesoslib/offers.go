@@ -10,20 +10,25 @@ func (m *MesosLib) RequestOffer(cpus, mem, disk float64) (*mesosproto.Offer, []*
 	m.Log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem, "disk": disk}).Info("Requesting offers...")
 
 	var (
-		resources = []*mesosproto.Resource{
-			&mesosproto.Resource{
-				Name:   proto.String("cpus"),
-				Type:   mesosproto.Value_SCALAR.Enum(),
-				Scalar: &mesosproto.Value_Scalar{Value: &cpus},
-			},
-			&mesosproto.Resource{
-				Name:   proto.String("mem"),
-				Type:   mesosproto.Value_SCALAR.Enum(),
-				Scalar: &mesosproto.Value_Scalar{Value: &mem},
-			},
-		}
-		event *mesosproto.Event
+		resources = []*mesosproto.Resource{}
+		event     *mesosproto.Event
 	)
+
+	if cpus > 0 {
+		resources = append(resources, &mesosproto.Resource{
+			Name:   proto.String("cpus"),
+			Type:   mesosproto.Value_SCALAR.Enum(),
+			Scalar: &mesosproto.Value_Scalar{Value: &cpus},
+		})
+	}
+
+	if mem > 0 {
+		resources = append(resources, &mesosproto.Resource{
+			Name:   proto.String("mem"),
+			Type:   mesosproto.Value_SCALAR.Enum(),
+			Scalar: &mesosproto.Value_Scalar{Value: &mem},
+		})
+	}
 
 	if disk > 0 {
 		resources = append(resources, &mesosproto.Resource{
