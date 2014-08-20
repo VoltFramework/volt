@@ -36,6 +36,10 @@
                     <input type="text" class="form-control" ng-model="task.disk" id="inputDisk">
                 </div>
                 <div class="form-group">
+                    <label for="inputDockerImage">Docker Image</label>
+                    <input type="text" class="form-control" ng-model="task.docker_image" id="inputDockerImage">
+                </div>
+                <div class="form-group">
                     <label for="inputCommand">Command</label>
                     <input type="text" class="form-control" ng-model="task.cmd" id="inputCommand">
                     <p class="help-block">Use absolute path, like /bin/ls</p>
@@ -90,6 +94,7 @@
 		<th>CPUs</th>
 		<th>Disk</th>
 		<th>MEM</th>
+		<th>Docker Image</th>
 		<th>Command</th>
 		<th>SlaveID</th>
 		<th>State</th>
@@ -113,12 +118,14 @@
 		<td></td>
 		<td></td>
 		<td></td>
+		<td></td>
 	      </tr>
                 <tr ng-repeat="task in tasks" class="{{task.class}} disabled">
 		  <td>{{task.id}}</td>
 		  <td>{{task.cpus}}</td>
                   <td>{{task.disk}}</td>
 		  <td>{{task.mem}}</td>
+		  <td>{{task.docker_image}}</td>
 		  <td>{{task.cmd}}</td>
 		  <td>{{task.slave_id}}</td>
 		  <td><b>{{task.state}}</b></td>

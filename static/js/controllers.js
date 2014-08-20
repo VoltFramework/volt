@@ -68,6 +68,7 @@ voltControllers.controller('Modal', function ($scope, $modal, $log) {
     cpus:'0.1',
     mem:'32',
     disk:'0',
+    docker_image:'busybox',
     cmd:'/bin/ls'
   }
   $scope.open = function (size) {
@@ -99,7 +100,7 @@ var ModalCtrl = function ($scope, $modalInstance, $http, task) {
 voltControllers.controller('File', function ($scope, $modal, $http) {
   $scope.file = {};
     $scope.refresh = function() {
-	$http.get('/tasks/'+$scope.file.id+'/file/volt_'+$scope.file.name).
+	$http.get('/tasks/'+$scope.file.id+'/file/'+$scope.file.name).
 	    success(function(data, status, headers, config) {
 		    $scope.file.content= data;
 	    }).
@@ -124,7 +125,7 @@ voltControllers.controller('File', function ($scope, $modal, $http) {
 var FileCtrl = function ($scope, $modalInstance, $http,file) {
     $scope.file = file;
       $scope.refresh = function() {
-	$http.get('/tasks/'+$scope.file.id+'/file/volt_'+$scope.file.name).
+	$http.get('/tasks/'+$scope.file.id+'/file/'+$scope.file.name).
 	    success(function(data, status, headers, config) {
 		    $scope.file.content= data;
 	    }).
