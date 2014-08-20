@@ -41,6 +41,8 @@ It has these top-level messages:
 	ACLs
 	RateLimit
 	RateLimits
+	Volume
+	ContainerInfo
 */
 package mesosproto
 
@@ -210,6 +212,69 @@ func (x *ACL_Entity_Type) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*x = ACL_Entity_Type(value)
+	return nil
+}
+
+type Volume_Mode int32
+
+const (
+	Volume_RW Volume_Mode = 1
+	Volume_RO Volume_Mode = 2
+)
+
+var Volume_Mode_name = map[int32]string{
+	1: "RW",
+	2: "RO",
+}
+var Volume_Mode_value = map[string]int32{
+	"RW": 1,
+	"RO": 2,
+}
+
+func (x Volume_Mode) Enum() *Volume_Mode {
+	p := new(Volume_Mode)
+	*p = x
+	return p
+}
+func (x Volume_Mode) String() string {
+	return proto.EnumName(Volume_Mode_name, int32(x))
+}
+func (x *Volume_Mode) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(Volume_Mode_value, data, "Volume_Mode")
+	if err != nil {
+		return err
+	}
+	*x = Volume_Mode(value)
+	return nil
+}
+
+type ContainerInfo_Type int32
+
+const (
+	ContainerInfo_DOCKER ContainerInfo_Type = 1
+)
+
+var ContainerInfo_Type_name = map[int32]string{
+	1: "DOCKER",
+}
+var ContainerInfo_Type_value = map[string]int32{
+	"DOCKER": 1,
+}
+
+func (x ContainerInfo_Type) Enum() *ContainerInfo_Type {
+	p := new(ContainerInfo_Type)
+	*p = x
+	return p
+}
+func (x ContainerInfo_Type) String() string {
+	return proto.EnumName(ContainerInfo_Type_name, int32(x))
+}
+func (x *ContainerInfo_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ContainerInfo_Type_value, data, "ContainerInfo_Type")
+	if err != nil {
+		return err
+	}
+	*x = ContainerInfo_Type(value)
 	return nil
 }
 
@@ -493,7 +558,9 @@ type CommandInfo struct {
 	Container        *CommandInfo_ContainerInfo `protobuf:"bytes,4,opt,name=container" json:"container,omitempty"`
 	Uris             []*CommandInfo_URI         `protobuf:"bytes,1,rep,name=uris" json:"uris,omitempty"`
 	Environment      *Environment               `protobuf:"bytes,2,opt,name=environment" json:"environment,omitempty"`
-	Value            *string                    `protobuf:"bytes,3,req,name=value" json:"value,omitempty"`
+	Shell            *bool                      `protobuf:"varint,6,opt,name=shell,def=1" json:"shell,omitempty"`
+	Value            *string                    `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
+	Arguments        []string                   `protobuf:"bytes,7,rep,name=arguments" json:"arguments,omitempty"`
 	User             *string                    `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
 	XXX_unrecognized []byte                     `json:"-"`
 }
@@ -501,6 +568,8 @@ type CommandInfo struct {
 func (m *CommandInfo) Reset()         { *m = CommandInfo{} }
 func (m *CommandInfo) String() string { return proto.CompactTextString(m) }
 func (*CommandInfo) ProtoMessage()    {}
+
+const Default_CommandInfo_Shell bool = true
 
 func (m *CommandInfo) GetContainer() *CommandInfo_ContainerInfo {
 	if m != nil {
@@ -523,11 +592,25 @@ func (m *CommandInfo) GetEnvironment() *Environment {
 	return nil
 }
 
+func (m *CommandInfo) GetShell() bool {
+	if m != nil && m.Shell != nil {
+		return *m.Shell
+	}
+	return Default_CommandInfo_Shell
+}
+
 func (m *CommandInfo) GetValue() string {
 	if m != nil && m.Value != nil {
 		return *m.Value
 	}
 	return ""
+}
+
+func (m *CommandInfo) GetArguments() []string {
+	if m != nil {
+		return m.Arguments
+	}
+	return nil
 }
 
 func (m *CommandInfo) GetUser() string {
@@ -596,14 +679,15 @@ func (m *CommandInfo_ContainerInfo) GetOptions() []string {
 }
 
 type ExecutorInfo struct {
-	ExecutorId       *ExecutorID  `protobuf:"bytes,1,req,name=executor_id" json:"executor_id,omitempty"`
-	FrameworkId      *FrameworkID `protobuf:"bytes,8,opt,name=framework_id" json:"framework_id,omitempty"`
-	Command          *CommandInfo `protobuf:"bytes,7,req,name=command" json:"command,omitempty"`
-	Resources        []*Resource  `protobuf:"bytes,5,rep,name=resources" json:"resources,omitempty"`
-	Name             *string      `protobuf:"bytes,9,opt,name=name" json:"name,omitempty"`
-	Source           *string      `protobuf:"bytes,10,opt,name=source" json:"source,omitempty"`
-	Data             []byte       `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
-	XXX_unrecognized []byte       `json:"-"`
+	ExecutorId       *ExecutorID    `protobuf:"bytes,1,req,name=executor_id" json:"executor_id,omitempty"`
+	FrameworkId      *FrameworkID   `protobuf:"bytes,8,opt,name=framework_id" json:"framework_id,omitempty"`
+	Command          *CommandInfo   `protobuf:"bytes,7,req,name=command" json:"command,omitempty"`
+	Container        *ContainerInfo `protobuf:"bytes,11,opt,name=container" json:"container,omitempty"`
+	Resources        []*Resource    `protobuf:"bytes,5,rep,name=resources" json:"resources,omitempty"`
+	Name             *string        `protobuf:"bytes,9,opt,name=name" json:"name,omitempty"`
+	Source           *string        `protobuf:"bytes,10,opt,name=source" json:"source,omitempty"`
+	Data             []byte         `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+	XXX_unrecognized []byte         `json:"-"`
 }
 
 func (m *ExecutorInfo) Reset()         { *m = ExecutorInfo{} }
@@ -627,6 +711,13 @@ func (m *ExecutorInfo) GetFrameworkId() *FrameworkID {
 func (m *ExecutorInfo) GetCommand() *CommandInfo {
 	if m != nil {
 		return m.Command
+	}
+	return nil
+}
+
+func (m *ExecutorInfo) GetContainer() *ContainerInfo {
+	if m != nil {
+		return m.Container
 	}
 	return nil
 }
@@ -716,7 +807,6 @@ type SlaveInfo struct {
 	Attributes       []*Attribute `protobuf:"bytes,5,rep,name=attributes" json:"attributes,omitempty"`
 	Id               *SlaveID     `protobuf:"bytes,6,opt,name=id" json:"id,omitempty"`
 	Checkpoint       *bool        `protobuf:"varint,7,opt,name=checkpoint,def=0" json:"checkpoint,omitempty"`
-	PrivateResources []*Resource  `protobuf:"bytes,9,rep,name=private_resources" json:"private_resources,omitempty"`
 	WebuiHostname    *string      `protobuf:"bytes,2,opt,name=webui_hostname" json:"webui_hostname,omitempty"`
 	WebuiPort        *int32       `protobuf:"varint,4,opt,name=webui_port,def=8081" json:"webui_port,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
@@ -770,13 +860,6 @@ func (m *SlaveInfo) GetCheckpoint() bool {
 		return *m.Checkpoint
 	}
 	return Default_SlaveInfo_Checkpoint
-}
-
-func (m *SlaveInfo) GetPrivateResources() []*Resource {
-	if m != nil {
-		return m.PrivateResources
-	}
-	return nil
 }
 
 func (m *SlaveInfo) GetWebuiHostname() string {
@@ -1796,15 +1879,16 @@ func (m *Offer) GetExecutorIds() []*ExecutorID {
 }
 
 type TaskInfo struct {
-	Name             *string       `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
-	TaskId           *TaskID       `protobuf:"bytes,2,req,name=task_id" json:"task_id,omitempty"`
-	SlaveId          *SlaveID      `protobuf:"bytes,3,req,name=slave_id" json:"slave_id,omitempty"`
-	Resources        []*Resource   `protobuf:"bytes,4,rep,name=resources" json:"resources,omitempty"`
-	Executor         *ExecutorInfo `protobuf:"bytes,5,opt,name=executor" json:"executor,omitempty"`
-	Command          *CommandInfo  `protobuf:"bytes,7,opt,name=command" json:"command,omitempty"`
-	Data             []byte        `protobuf:"bytes,6,opt,name=data" json:"data,omitempty"`
-	HealthCheck      *HealthCheck  `protobuf:"bytes,8,opt,name=health_check" json:"health_check,omitempty"`
-	XXX_unrecognized []byte        `json:"-"`
+	Name             *string        `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
+	TaskId           *TaskID        `protobuf:"bytes,2,req,name=task_id" json:"task_id,omitempty"`
+	SlaveId          *SlaveID       `protobuf:"bytes,3,req,name=slave_id" json:"slave_id,omitempty"`
+	Resources        []*Resource    `protobuf:"bytes,4,rep,name=resources" json:"resources,omitempty"`
+	Executor         *ExecutorInfo  `protobuf:"bytes,5,opt,name=executor" json:"executor,omitempty"`
+	Command          *CommandInfo   `protobuf:"bytes,7,opt,name=command" json:"command,omitempty"`
+	Container        *ContainerInfo `protobuf:"bytes,9,opt,name=container" json:"container,omitempty"`
+	Data             []byte         `protobuf:"bytes,6,opt,name=data" json:"data,omitempty"`
+	HealthCheck      *HealthCheck   `protobuf:"bytes,8,opt,name=health_check" json:"health_check,omitempty"`
+	XXX_unrecognized []byte         `json:"-"`
 }
 
 func (m *TaskInfo) Reset()         { *m = TaskInfo{} }
@@ -1849,6 +1933,13 @@ func (m *TaskInfo) GetExecutor() *ExecutorInfo {
 func (m *TaskInfo) GetCommand() *CommandInfo {
 	if m != nil {
 		return m.Command
+	}
+	return nil
+}
+
+func (m *TaskInfo) GetContainer() *ContainerInfo {
+	if m != nil {
+		return m.Container
 	}
 	return nil
 }
@@ -2062,8 +2153,7 @@ func (m *Credential) GetSecret() []byte {
 }
 
 type Credentials struct {
-	Registration     []*Credential `protobuf:"bytes,1,rep,name=registration" json:"registration,omitempty"`
-	Http             []*Credential `protobuf:"bytes,2,rep,name=http" json:"http,omitempty"`
+	Credentials      []*Credential `protobuf:"bytes,1,rep,name=credentials" json:"credentials,omitempty"`
 	XXX_unrecognized []byte        `json:"-"`
 }
 
@@ -2071,16 +2161,9 @@ func (m *Credentials) Reset()         { *m = Credentials{} }
 func (m *Credentials) String() string { return proto.CompactTextString(m) }
 func (*Credentials) ProtoMessage()    {}
 
-func (m *Credentials) GetRegistration() []*Credential {
+func (m *Credentials) GetCredentials() []*Credential {
 	if m != nil {
-		return m.Registration
-	}
-	return nil
-}
-
-func (m *Credentials) GetHttp() []*Credential {
-	if m != nil {
-		return m.Http
+		return m.Credentials
 	}
 	return nil
 }
@@ -2119,141 +2202,84 @@ func (m *ACL_Entity) GetValues() []string {
 	return nil
 }
 
-type ACL_RunTasks struct {
-	Principals       *ACL_Entity `protobuf:"bytes,1,req,name=principals" json:"principals,omitempty"`
-	Users            *ACL_Entity `protobuf:"bytes,2,req,name=users" json:"users,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *ACL_RunTasks) Reset()         { *m = ACL_RunTasks{} }
-func (m *ACL_RunTasks) String() string { return proto.CompactTextString(m) }
-func (*ACL_RunTasks) ProtoMessage()    {}
-
-func (m *ACL_RunTasks) GetPrincipals() *ACL_Entity {
-	if m != nil {
-		return m.Principals
-	}
-	return nil
-}
-
-func (m *ACL_RunTasks) GetUsers() *ACL_Entity {
-	if m != nil {
-		return m.Users
-	}
-	return nil
-}
-
-type ACL_ReceiveOffers struct {
+type ACL_RegisterFramework struct {
 	Principals       *ACL_Entity `protobuf:"bytes,1,req,name=principals" json:"principals,omitempty"`
 	Roles            *ACL_Entity `protobuf:"bytes,2,req,name=roles" json:"roles,omitempty"`
 	XXX_unrecognized []byte      `json:"-"`
 }
 
-func (m *ACL_ReceiveOffers) Reset()         { *m = ACL_ReceiveOffers{} }
-func (m *ACL_ReceiveOffers) String() string { return proto.CompactTextString(m) }
-func (*ACL_ReceiveOffers) ProtoMessage()    {}
+func (m *ACL_RegisterFramework) Reset()         { *m = ACL_RegisterFramework{} }
+func (m *ACL_RegisterFramework) String() string { return proto.CompactTextString(m) }
+func (*ACL_RegisterFramework) ProtoMessage()    {}
 
-func (m *ACL_ReceiveOffers) GetPrincipals() *ACL_Entity {
+func (m *ACL_RegisterFramework) GetPrincipals() *ACL_Entity {
 	if m != nil {
 		return m.Principals
 	}
 	return nil
 }
 
-func (m *ACL_ReceiveOffers) GetRoles() *ACL_Entity {
+func (m *ACL_RegisterFramework) GetRoles() *ACL_Entity {
 	if m != nil {
 		return m.Roles
 	}
 	return nil
 }
 
-type ACL_HTTPGet struct {
-	Usernames        *ACL_Entity `protobuf:"bytes,1,opt,name=usernames" json:"usernames,omitempty"`
-	Ips              *ACL_Entity `protobuf:"bytes,2,opt,name=ips" json:"ips,omitempty"`
-	Hostnames        *ACL_Entity `protobuf:"bytes,3,opt,name=hostnames" json:"hostnames,omitempty"`
-	Urls             *ACL_Entity `protobuf:"bytes,4,req,name=urls" json:"urls,omitempty"`
+type ACL_RunTask struct {
+	Principals       *ACL_Entity `protobuf:"bytes,1,req,name=principals" json:"principals,omitempty"`
+	Users            *ACL_Entity `protobuf:"bytes,2,req,name=users" json:"users,omitempty"`
 	XXX_unrecognized []byte      `json:"-"`
 }
 
-func (m *ACL_HTTPGet) Reset()         { *m = ACL_HTTPGet{} }
-func (m *ACL_HTTPGet) String() string { return proto.CompactTextString(m) }
-func (*ACL_HTTPGet) ProtoMessage()    {}
+func (m *ACL_RunTask) Reset()         { *m = ACL_RunTask{} }
+func (m *ACL_RunTask) String() string { return proto.CompactTextString(m) }
+func (*ACL_RunTask) ProtoMessage()    {}
 
-func (m *ACL_HTTPGet) GetUsernames() *ACL_Entity {
+func (m *ACL_RunTask) GetPrincipals() *ACL_Entity {
 	if m != nil {
-		return m.Usernames
+		return m.Principals
 	}
 	return nil
 }
 
-func (m *ACL_HTTPGet) GetIps() *ACL_Entity {
+func (m *ACL_RunTask) GetUsers() *ACL_Entity {
 	if m != nil {
-		return m.Ips
+		return m.Users
 	}
 	return nil
 }
 
-func (m *ACL_HTTPGet) GetHostnames() *ACL_Entity {
+type ACL_ShutdownFramework struct {
+	Principals          *ACL_Entity `protobuf:"bytes,1,req,name=principals" json:"principals,omitempty"`
+	FrameworkPrincipals *ACL_Entity `protobuf:"bytes,2,req,name=framework_principals" json:"framework_principals,omitempty"`
+	XXX_unrecognized    []byte      `json:"-"`
+}
+
+func (m *ACL_ShutdownFramework) Reset()         { *m = ACL_ShutdownFramework{} }
+func (m *ACL_ShutdownFramework) String() string { return proto.CompactTextString(m) }
+func (*ACL_ShutdownFramework) ProtoMessage()    {}
+
+func (m *ACL_ShutdownFramework) GetPrincipals() *ACL_Entity {
 	if m != nil {
-		return m.Hostnames
+		return m.Principals
 	}
 	return nil
 }
 
-func (m *ACL_HTTPGet) GetUrls() *ACL_Entity {
+func (m *ACL_ShutdownFramework) GetFrameworkPrincipals() *ACL_Entity {
 	if m != nil {
-		return m.Urls
-	}
-	return nil
-}
-
-type ACL_HTTPPut struct {
-	Usernames        *ACL_Entity `protobuf:"bytes,1,opt,name=usernames" json:"usernames,omitempty"`
-	Ips              *ACL_Entity `protobuf:"bytes,2,opt,name=ips" json:"ips,omitempty"`
-	Hostnames        *ACL_Entity `protobuf:"bytes,3,opt,name=hostnames" json:"hostnames,omitempty"`
-	Urls             *ACL_Entity `protobuf:"bytes,4,req,name=urls" json:"urls,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *ACL_HTTPPut) Reset()         { *m = ACL_HTTPPut{} }
-func (m *ACL_HTTPPut) String() string { return proto.CompactTextString(m) }
-func (*ACL_HTTPPut) ProtoMessage()    {}
-
-func (m *ACL_HTTPPut) GetUsernames() *ACL_Entity {
-	if m != nil {
-		return m.Usernames
-	}
-	return nil
-}
-
-func (m *ACL_HTTPPut) GetIps() *ACL_Entity {
-	if m != nil {
-		return m.Ips
-	}
-	return nil
-}
-
-func (m *ACL_HTTPPut) GetHostnames() *ACL_Entity {
-	if m != nil {
-		return m.Hostnames
-	}
-	return nil
-}
-
-func (m *ACL_HTTPPut) GetUrls() *ACL_Entity {
-	if m != nil {
-		return m.Urls
+		return m.FrameworkPrincipals
 	}
 	return nil
 }
 
 type ACLs struct {
-	Permissive       *bool                `protobuf:"varint,1,opt,name=permissive,def=1" json:"permissive,omitempty"`
-	RunTasks         []*ACL_RunTasks      `protobuf:"bytes,2,rep,name=run_tasks" json:"run_tasks,omitempty"`
-	ReceiveOffers    []*ACL_ReceiveOffers `protobuf:"bytes,3,rep,name=receive_offers" json:"receive_offers,omitempty"`
-	HttpGet          []*ACL_HTTPGet       `protobuf:"bytes,4,rep,name=http_get" json:"http_get,omitempty"`
-	HttpPut          []*ACL_HTTPPut       `protobuf:"bytes,5,rep,name=http_put" json:"http_put,omitempty"`
-	XXX_unrecognized []byte               `json:"-"`
+	Permissive         *bool                    `protobuf:"varint,1,opt,name=permissive,def=1" json:"permissive,omitempty"`
+	RegisterFrameworks []*ACL_RegisterFramework `protobuf:"bytes,2,rep,name=register_frameworks" json:"register_frameworks,omitempty"`
+	RunTasks           []*ACL_RunTask           `protobuf:"bytes,3,rep,name=run_tasks" json:"run_tasks,omitempty"`
+	ShutdownFrameworks []*ACL_ShutdownFramework `protobuf:"bytes,4,rep,name=shutdown_frameworks" json:"shutdown_frameworks,omitempty"`
+	XXX_unrecognized   []byte                   `json:"-"`
 }
 
 func (m *ACLs) Reset()         { *m = ACLs{} }
@@ -2269,30 +2295,23 @@ func (m *ACLs) GetPermissive() bool {
 	return Default_ACLs_Permissive
 }
 
-func (m *ACLs) GetRunTasks() []*ACL_RunTasks {
+func (m *ACLs) GetRegisterFrameworks() []*ACL_RegisterFramework {
+	if m != nil {
+		return m.RegisterFrameworks
+	}
+	return nil
+}
+
+func (m *ACLs) GetRunTasks() []*ACL_RunTask {
 	if m != nil {
 		return m.RunTasks
 	}
 	return nil
 }
 
-func (m *ACLs) GetReceiveOffers() []*ACL_ReceiveOffers {
+func (m *ACLs) GetShutdownFrameworks() []*ACL_ShutdownFramework {
 	if m != nil {
-		return m.ReceiveOffers
-	}
-	return nil
-}
-
-func (m *ACLs) GetHttpGet() []*ACL_HTTPGet {
-	if m != nil {
-		return m.HttpGet
-	}
-	return nil
-}
-
-func (m *ACLs) GetHttpPut() []*ACL_HTTPPut {
-	if m != nil {
-		return m.HttpPut
+		return m.ShutdownFrameworks
 	}
 	return nil
 }
@@ -2300,6 +2319,7 @@ func (m *ACLs) GetHttpPut() []*ACL_HTTPPut {
 type RateLimit struct {
 	Qps              *float64 `protobuf:"fixed64,1,opt,name=qps" json:"qps,omitempty"`
 	Principal        *string  `protobuf:"bytes,2,req,name=principal" json:"principal,omitempty"`
+	Capacity         *uint64  `protobuf:"varint,3,opt,name=capacity" json:"capacity,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
 
@@ -2321,10 +2341,18 @@ func (m *RateLimit) GetPrincipal() string {
 	return ""
 }
 
+func (m *RateLimit) GetCapacity() uint64 {
+	if m != nil && m.Capacity != nil {
+		return *m.Capacity
+	}
+	return 0
+}
+
 type RateLimits struct {
-	Limits              []*RateLimit `protobuf:"bytes,1,rep,name=limits" json:"limits,omitempty"`
-	AggregateDefaultQps *float64     `protobuf:"fixed64,2,opt,name=aggregate_default_qps" json:"aggregate_default_qps,omitempty"`
-	XXX_unrecognized    []byte       `json:"-"`
+	Limits                   []*RateLimit `protobuf:"bytes,1,rep,name=limits" json:"limits,omitempty"`
+	AggregateDefaultQps      *float64     `protobuf:"fixed64,2,opt,name=aggregate_default_qps" json:"aggregate_default_qps,omitempty"`
+	AggregateDefaultCapacity *uint64      `protobuf:"varint,3,opt,name=aggregate_default_capacity" json:"aggregate_default_capacity,omitempty"`
+	XXX_unrecognized         []byte       `json:"-"`
 }
 
 func (m *RateLimits) Reset()         { *m = RateLimits{} }
@@ -2345,9 +2373,98 @@ func (m *RateLimits) GetAggregateDefaultQps() float64 {
 	return 0
 }
 
+func (m *RateLimits) GetAggregateDefaultCapacity() uint64 {
+	if m != nil && m.AggregateDefaultCapacity != nil {
+		return *m.AggregateDefaultCapacity
+	}
+	return 0
+}
+
+type Volume struct {
+	ContainerPath    *string      `protobuf:"bytes,1,req,name=container_path" json:"container_path,omitempty"`
+	HostPath         *string      `protobuf:"bytes,2,opt,name=host_path" json:"host_path,omitempty"`
+	Mode             *Volume_Mode `protobuf:"varint,3,req,name=mode,enum=mesos.Volume_Mode" json:"mode,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *Volume) Reset()         { *m = Volume{} }
+func (m *Volume) String() string { return proto.CompactTextString(m) }
+func (*Volume) ProtoMessage()    {}
+
+func (m *Volume) GetContainerPath() string {
+	if m != nil && m.ContainerPath != nil {
+		return *m.ContainerPath
+	}
+	return ""
+}
+
+func (m *Volume) GetHostPath() string {
+	if m != nil && m.HostPath != nil {
+		return *m.HostPath
+	}
+	return ""
+}
+
+func (m *Volume) GetMode() Volume_Mode {
+	if m != nil && m.Mode != nil {
+		return *m.Mode
+	}
+	return Volume_RW
+}
+
+type ContainerInfo struct {
+	Type             *ContainerInfo_Type       `protobuf:"varint,1,req,name=type,enum=mesos.ContainerInfo_Type" json:"type,omitempty"`
+	Volumes          []*Volume                 `protobuf:"bytes,2,rep,name=volumes" json:"volumes,omitempty"`
+	Docker           *ContainerInfo_DockerInfo `protobuf:"bytes,3,opt,name=docker" json:"docker,omitempty"`
+	XXX_unrecognized []byte                    `json:"-"`
+}
+
+func (m *ContainerInfo) Reset()         { *m = ContainerInfo{} }
+func (m *ContainerInfo) String() string { return proto.CompactTextString(m) }
+func (*ContainerInfo) ProtoMessage()    {}
+
+func (m *ContainerInfo) GetType() ContainerInfo_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ContainerInfo_DOCKER
+}
+
+func (m *ContainerInfo) GetVolumes() []*Volume {
+	if m != nil {
+		return m.Volumes
+	}
+	return nil
+}
+
+func (m *ContainerInfo) GetDocker() *ContainerInfo_DockerInfo {
+	if m != nil {
+		return m.Docker
+	}
+	return nil
+}
+
+type ContainerInfo_DockerInfo struct {
+	Image            *string `protobuf:"bytes,1,req,name=image" json:"image,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ContainerInfo_DockerInfo) Reset()         { *m = ContainerInfo_DockerInfo{} }
+func (m *ContainerInfo_DockerInfo) String() string { return proto.CompactTextString(m) }
+func (*ContainerInfo_DockerInfo) ProtoMessage()    {}
+
+func (m *ContainerInfo_DockerInfo) GetImage() string {
+	if m != nil && m.Image != nil {
+		return *m.Image
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterEnum("mesos.Status", Status_name, Status_value)
 	proto.RegisterEnum("mesos.TaskState", TaskState_name, TaskState_value)
 	proto.RegisterEnum("mesos.Value_Type", Value_Type_name, Value_Type_value)
 	proto.RegisterEnum("mesos.ACL_Entity_Type", ACL_Entity_Type_name, ACL_Entity_Type_value)
+	proto.RegisterEnum("mesos.Volume_Mode", Volume_Mode_name, Volume_Mode_value)
+	proto.RegisterEnum("mesos.ContainerInfo_Type", ContainerInfo_Type_name, ContainerInfo_Type_value)
 }
