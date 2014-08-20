@@ -2,6 +2,7 @@ package mesoslib
 
 import (
 	"fmt"
+	"strings"
 
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/Sirupsen/logrus"
@@ -11,6 +12,8 @@ import (
 func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, command, ID, image string) error {
 	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id, "dockerImage": image}).Info("Launching task...")
 
+	args := strings.Split(command, " ")
+
 	taskInfo := &mesosproto.TaskInfo{
 		Name: proto.String(fmt.Sprintf("volt-task-%s", ID)),
 		TaskId: &mesosproto.TaskID{
@@ -19,7 +22,9 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.R
 		SlaveId:   offer.SlaveId,
 		Resources: resources,
 		Command: &mesosproto.CommandInfo{
-			Value: &command,
+			Value:     &args[0],
+			Arguments: args[1:],
+			Shell:     proto.Bool(false),
 		},
 	}
 
