@@ -40,12 +40,13 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 }
 
 type Task struct {
-	ID      string   `json:"id"`
-	Command string   `json:"cmd"`
-	Cpus    float64  `json:"cpus,string"`
-	Disk    float64  `json:"disk,string"`
-	Mem     float64  `json:"mem,string"`
-	Files   []string `json:"files"`
+	ID          string   `json:"id"`
+	Command     string   `json:"cmd"`
+	Cpus        float64  `json:"cpus,string"`
+	Disk        float64  `json:"disk,string"`
+	Mem         float64  `json:"mem,string"`
+	Files       []string `json:"files"`
+	DockerImage string   `json:"docker_image"`
 
 	SlaveId *string               `json:"slave_id,string"`
 	State   *mesosproto.TaskState `json:"state,string"`
@@ -99,7 +100,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		}
 		if offer != nil {
 			task.SlaveId = offer.SlaveId.Value
-			return api.m.LaunchTask(offer, resources, task.Command+" > volt_stdout 2> volt_stderr", task.ID)
+			return api.m.LaunchTask(offer, resources, task.Command, task.ID, task.DockerImage)
 		}
 		return fmt.Errorf("No offer available")
 	}

@@ -8,24 +8,33 @@ import (
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, command, ID string) error {
-	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id}).Info("Launching task...")
+func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, command, ID, image string) error {
+	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id, "dockerImage": image}).Info("Launching task...")
+
+	taskInfo := &mesosproto.TaskInfo{
+		Name: proto.String(fmt.Sprintf("volt-task-%s", ID)),
+		TaskId: &mesosproto.TaskID{
+			Value: &ID,
+		},
+		SlaveId:   offer.SlaveId,
+		Resources: resources,
+		Command: &mesosproto.CommandInfo{
+			Value: &command,
+		},
+	}
+
+	if image != "" {
+		taskInfo.Container = &mesosproto.ContainerInfo{
+			Type: mesosproto.ContainerInfo_DOCKER.Enum(),
+			Docker: &mesosproto.ContainerInfo_DockerInfo{
+				Image: &image,
+			},
+		}
+	}
 
 	return m.send(&mesosproto.LaunchTasksMessage{
 		FrameworkId: m.frameworkInfo.Id,
-		Tasks: []*mesosproto.TaskInfo{
-			&mesosproto.TaskInfo{
-				Name: proto.String(fmt.Sprintf("volt-task-%s", ID)),
-				TaskId: &mesosproto.TaskID{
-					Value: &ID,
-				},
-				SlaveId:   offer.SlaveId,
-				Resources: resources,
-				Command: &mesosproto.CommandInfo{
-					Value: &command,
-				},
-			},
-		},
+		Tasks:       []*mesosproto.TaskInfo{taskInfo},
 		OfferIds: []*mesosproto.OfferID{
 			offer.Id,
 		},
