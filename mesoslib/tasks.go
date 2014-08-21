@@ -22,10 +22,16 @@ func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.R
 		SlaveId:   offer.SlaveId,
 		Resources: resources,
 		Command: &mesosproto.CommandInfo{
-			Value:     &args[0],
-			Arguments: args[1:],
-			Shell:     proto.Bool(false),
+			Shell: proto.Bool(false),
 		},
+	}
+
+	if args[0] != "" {
+		taskInfo.Command.Value = &args[0]
+	}
+
+	if len(args) > 1 {
+		taskInfo.Command.Arguments = args[1:]
 	}
 
 	if image != "" {
