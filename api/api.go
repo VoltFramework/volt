@@ -19,8 +19,7 @@ import (
 type API struct {
 	sync.RWMutex
 
-	m   *mesoslib.MesosLib
-	log *logrus.Logger
+	m *mesoslib.MesosLib
 
 	tasks  []*Task
 	states map[string]*mesosproto.TaskState
@@ -94,15 +93,16 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	api.Unlock()
 
 	f := func() error {
-		offer, resources, err := api.m.RequestOffer(task.Cpus, task.Mem, task.Disk)
+		var resources = api.m.BuildResources(task.Cpus, task.Mem, task.Disk)
+		offers, err := api.m.RequestOffers(resources)
 		if err != nil {
 			return err
 		}
-		if offer != nil {
-			task.SlaveId = offer.SlaveId.Value
-			return api.m.LaunchTask(offer, resources, task.Command, task.ID, task.DockerImage)
+		if len(offers) > 0 {
+			task.SlaveId = offers[0].SlaveId.Value
+			return api.m.LaunchTask(offers[0], resources, task.Command, task.ID, task.DockerImage)
 		}
-		return fmt.Errorf("No offer available")
+		return fmt.Errorf("No offers available")
 	}
 	if len(task.Files) > 0 {
 		if err := f(); err != nil {
