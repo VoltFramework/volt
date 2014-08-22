@@ -74,18 +74,23 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, t
 	return &taskInfo
 }
 
-func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, task *Task) error {
-	m.Log.WithFields(logrus.Fields{"ID": task.ID, "command": task.Command, "offerId": offer.Id, "dockerImage": task.Image}).Info("Launching task...")
+func (m *MesosLib) LaunchTask(offers []*mesosproto.Offer, resources []*mesosproto.Resource, task *Task) error {
+	m.Log.WithFields(logrus.Fields{"ID": task.ID, "command": task.Command, "offer(s)": len(offers), "dockerImage": task.Image}).Info("Launching task...")
 
-	taskInfo := createTaskInfo(offer, resources, task)
+	var (
+		taskInfo = createTaskInfo(offers[0], resources, task)
+		offerIds = []*mesosproto.OfferID{}
+	)
+
+	for _, offer := range offers {
+		offerIds = append(offerIds, offer.Id)
+	}
 
 	return m.send(&mesosproto.LaunchTasksMessage{
 		FrameworkId: m.frameworkInfo.Id,
 		Tasks:       []*mesosproto.TaskInfo{taskInfo},
-		OfferIds: []*mesosproto.OfferID{
-			offer.Id,
-		},
-		Filters: &mesosproto.Filters{},
+		OfferIds:    offerIds,
+		Filters:     &mesosproto.Filters{},
 	}, "mesos.internal.LaunchTasksMessage")
 }
 

@@ -71,27 +71,63 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f := func() error {
-		var resources = api.m.BuildResources(task.Cpus, task.Mem, task.Disk)
-		offers, err := api.m.RequestOffers(resources)
-		if err != nil {
-			return err
-		}
+		var (
+			requestedResources = api.m.BuildResources(task.Cpus, task.Mem, task.Disk)
+			combinedResources  []*mesosproto.Resource
+			combinedOffers     = make(map[string][]*mesosproto.Offer)
+			selectedSlave      string
+			until              int
+		)
 
-		if len(offers) > 0 {
-			task.SlaveId = offers[0].SlaveId.Value
-
-			if err := api.registry.Update(task.ID, task); err != nil {
+		for {
+			// Request offers
+			offers, err := api.m.RequestOffers(requestedResources)
+			if err != nil {
 				return err
 			}
 
-			return api.m.LaunchTask(offers[0], resources, &mesoslib.Task{
-				ID:      task.ID,
-				Command: strings.Split(task.Command, " "),
-				Image:   task.DockerImage,
-				Volumes: task.Volumes,
-			})
-		}
+			// Combine those offers by SlaveId
+			for _, offer := range offers {
+				slave := offer.SlaveId.GetValue()
+				combinedOffers[slave] = append(combinedOffers[slave], offer)
+			}
 
+			for slave, offers := range combinedOffers { // For each slave
+				combinedResources = nil
+				for i, offer := range offers { // For each offer or this slave
+					combinedResources = api.m.CombineResources(combinedResources, offer.Resources) // Combine this offer with the previous tried for this slave
+					if api.m.IsEnough(requestedResources, combinedResources) {
+						selectedSlave = slave
+						api.m.Log.WithFields(logrus.Fields{"ID": task.ID, "Slave": selectedSlave}).Debug("Slave selected.")
+						until = i
+
+						task.SlaveId = &selectedSlave
+						if err := api.registry.Update(task.ID, task); err != nil {
+							return err
+						}
+						break
+					}
+				}
+			}
+
+			if selectedSlave != "" { // A slave was selected because it has enough resrouces
+				for slave, offers := range combinedOffers {
+					if slave != selectedSlave { // Decline all offers from the other slaves
+						api.m.DeclineOffers(offers)
+					} else if until < len(offers)-1 {
+						api.m.DeclineOffers(offers[until+1:]) // Decline the unneeded offers from the selected slave
+					}
+				}
+
+				return api.m.LaunchTask(combinedOffers[selectedSlave][:until+1], requestedResources, &mesoslib.Task{
+					ID:      task.ID,
+					Command: strings.Split(task.Command, " "),
+					Image:   task.DockerImage,
+					Volumes: task.Volumes,
+				})
+			}
+		}
+		// Unreachable, TODO: add a timeout
 		return fmt.Errorf("No offers available")
 	}
 
