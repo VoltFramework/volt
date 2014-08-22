@@ -29,3 +29,18 @@ func (m *MesosLib) RequestOffers(resources []*mesosproto.Resource) ([]*mesosprot
 	m.Log.Infof("Received %d offer(s).", len(event.Offers.Offers))
 	return event.Offers.Offers, nil
 }
+
+func (m *MesosLib) DeclineOffers(offers []*mesosproto.Offer) error {
+	m.Log.Infof("Declining %d offers.", len(offers))
+	var offerIds = []*mesosproto.OfferID{}
+
+	for _, offer := range offers {
+		offerIds = append(offerIds, offer.Id)
+	}
+
+	return m.send(&mesosproto.LaunchTasksMessage{
+		FrameworkId: m.frameworkInfo.Id,
+		OfferIds:    offerIds,
+		Filters:     &mesosproto.Filters{},
+	}, "mesos.internal.LaunchTasksMessage")
+}

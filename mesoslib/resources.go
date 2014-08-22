@@ -13,7 +13,22 @@ func createScalarResource(name string, value float64) *mesosproto.Resource {
 	}
 }
 
-func (m *MesosLib) BuildResources(cpus, mem, disk float64) []*mesosproto.Resource {
+func (m *MesosLib) ResourcesToFloats(resources []*mesosproto.Resource) (cpus, mem, disk float64) {
+	for _, resource := range resources {
+		if *resource.Name == "cpus" {
+			cpus = resource.Scalar.GetValue()
+		}
+		if *resource.Name == "mem" {
+			mem = resource.Scalar.GetValue()
+		}
+		if *resource.Name == "disk" {
+			disk = resource.Scalar.GetValue()
+		}
+	}
+	return
+}
+
+func (m *MesosLib) FloatsToResources(cpus, mem, disk float64) []*mesosproto.Resource {
 	m.Log.WithFields(logrus.Fields{"cpus": cpus, "mem": mem, "disk": disk}).Info("Building resources...")
 	var resources = []*mesosproto.Resource{}
 
