@@ -24,6 +24,7 @@ func (m *MesosLib) initAPI() {
 			"/{scheduler}/mesos.internal.FrameworkRegisteredMessage": m.FrameworkRegisteredMessage,
 			"/{scheduler}/mesos.internal.ResourceOffersMessage":      m.ResourceOffersMessage,
 			"/{scheduler}/mesos.internal.StatusUpdateMessage":        m.StatusUpdateMessage,
+			"/{scheduler}/mesos.internal.FrameworkErrorMessage":      m.FrameworkErrorMessage,
 		},
 	}
 
@@ -59,6 +60,19 @@ func (m *MesosLib) initAPI() {
 			m.Log.Fatalf("failed to start listening on port %d", m.port)
 		}
 	}()
+}
+
+// Endpoint called by the master upon error
+func (m *MesosLib) FrameworkErrorMessage(w http.ResponseWriter, r *http.Request, data []byte) error {
+	message := new(mesosproto.FrameworkErrorMessage)
+	if err := proto.Unmarshal(data, message); err != nil {
+		return err
+	}
+
+	m.Log.Warn(message.GetMessage())
+
+	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
 // Endpoint called by the master upon registration
