@@ -18,6 +18,17 @@ go install github.com/VoltFramework/volt
 
 If `$GOPATH/bin` is in your `PATH`, you can invoke `volt` from the CLI.
 
+## Running
+
+To get started with the framework, run the following commands on a mesos
+master node:
+
+```
+wget https://github.com/voltframework/volt/releases/downloads/v1.0.0-alpha/volt
+chmod +x volt
+./volt --master=localhost:5050
+```
+
 ## Creators
 
 **Victor Vieux**
