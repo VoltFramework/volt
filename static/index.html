@@ -120,15 +120,15 @@
 		<td></td>
 		<td></td>
 	      </tr>
-                <tr ng-repeat="task in tasks" class="{{task.class}} disabled">
+          <tr ng-repeat="task in tasks">
 		  <td>{{task.id}}</td>
 		  <td>{{task.cpus}}</td>
-                  <td>{{task.disk}}</td>
+          <td>{{task.disk}}</td>
 		  <td>{{task.mem}}</td>
 		  <td>{{task.docker_image}}</td>
 		  <td>{{task.cmd}}</td>
 		  <td>{{task.slave_id}}</td>
-		  <td><b>{{task.state}}</b></td>
+          <td><span class="label label-{{task.class}}">{{task.state}}</span></td>
 		  <td>
 		    <span class="label label-primary" ng-controller="File">
 		      <a href="#" ng-click="open('stdout', task.id, 'lg')" style="color: #fff !important">stdout</a>
