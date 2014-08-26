@@ -4,6 +4,10 @@
 
 ## Installation
 
+The following steps describe how to get started with the Volt framework.
+
+### From Source
+
 First get the go dependencies:
 
 ```sh
@@ -18,9 +22,9 @@ go install github.com/VoltFramework/volt
 
 If `$GOPATH/bin` is in your `PATH`, you can invoke `volt` from the CLI.
 
-## Running
+### Latest Release
 
-To get started with the framework, run the following commands on a mesos
+To get started with the latest release, run the following commands on a mesos
 master node:
 
 ```
