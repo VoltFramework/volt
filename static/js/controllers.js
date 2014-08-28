@@ -46,13 +46,26 @@ voltControllers.controller('Charts', ['$scope', 'Metrics', '$interval', '$http',
 }]);
 
 voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', function ($scope, Tasks, $interval, $http) {
+
+  $scope.pageChanged = function() {
+      Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
+          $scope.tasks = d.tasks;
+	  $scope.totalItems = d.total;
+      });
+  };
+
   $scope.refreshInterval = 5;
   $interval(function() {
-      Tasks.query(function(d) {
-          $scope.tasks = d;
+      Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
+          $scope.tasks = d.tasks;
+	  $scope.totalItems = d.total;
       });
   }, $scope.refreshInterval * 1000);
-  $scope.tasks = Tasks.query();
+
+    Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
+        $scope.tasks = d.tasks;
+	$scope.totalItems = d.total;
+      });
 
     $scope.trash = function (id) {
       $http({method: 'DELETE', url: '/tasks/'+id}).success(function(data) {});

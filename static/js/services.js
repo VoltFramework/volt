@@ -4,45 +4,47 @@ voltServices.factory('Tasks', function ($resource) {
     return $resource('/tasks', {}, {
                         'query': {
                             method: 'GET', 
-                            isArray: true,
+                            isArray: false,
                             transformResponse: function (data, headers) {
 				if (data == '') {
 				    return data;
 				}
-                                var tasks = JSON.parse(data).tasks;
-				for (id in tasks) {
-				    switch (tasks[id].state) {
+
+				data = JSON.parse(data);
+				for (id in data.tasks) {
+				    switch (data.tasks[id].state) {
 				    case 0:
-					tasks[id].state="STARTING";
-					tasks[id].class="info";
+					data.tasks[id].state="STARTING";
+					data.tasks[id].class="info";
 					break;
 				    case 1:
-					tasks[id].state="RUNNING";
-					tasks[id].class="info";
+					data.tasks[id].state="RUNNING";
+					data.tasks[id].class="info";
 					break;
 				    case 2:
-					tasks[id].state="FINISHED";
-					tasks[id].class="success";
+					data.tasks[id].state="FINISHED";
+					data.tasks[id].class="success";
 					break;
 				    case 3:
-					tasks[id].state="FAILED";
-					tasks[id].class="danger";
+					data.tasks[id].state="FAILED";
+					data.tasks[id].class="danger";
 					break;
 				    case 4:
-					tasks[id].state="KILLED";
-					tasks[id].class="danger";
+					data.tasks[id].state="KILLED";
+					data.tasks[id].class="danger";
 					break;
 				    case 5:
-					tasks[id].state="LOST";
-					tasks[id].class="danger";
+					data.tasks[id].state="LOST";
+					data.tasks[id].class="danger";
 					break;
 				    case 6:
-					tasks[id].state="STAGING";
-					tasks[id].class="default";
+					data.tasks[id].state="STAGING";
+					data.tasks[id].class="default";
 					break;
 				    }
 				}
-				return tasks;
+
+				return data;
                             }
                         }
     })
