@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
@@ -21,14 +22,14 @@ type API struct {
 
 	m *mesoslib.MesosLib
 
-	tasks  []*Task
+	tasks  Tasks
 	states map[string]*mesosproto.TaskState
 }
 
 func NewAPI(m *mesoslib.MesosLib) *API {
 	return &API{
 		m:      m,
-		tasks:  make([]*Task, 0),
+		tasks:  make(Tasks, 0),
 		states: make(map[string]*mesosproto.TaskState, 0),
 	}
 }
@@ -36,19 +37,6 @@ func NewAPI(m *mesoslib.MesosLib) *API {
 // Simple _ping endpoint, returns OK
 func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
-}
-
-type Task struct {
-	ID          string   `json:"id"`
-	Command     string   `json:"cmd"`
-	Cpus        float64  `json:"cpus,string"`
-	Disk        float64  `json:"disk,string"`
-	Mem         float64  `json:"mem,string"`
-	Files       []string `json:"files"`
-	DockerImage string   `json:"docker_image"`
-
-	SlaveId *string               `json:"slave_id,string"`
-	State   *mesosproto.TaskState `json:"state,string"`
 }
 
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
@@ -127,13 +115,28 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 // Endpoint to list all the tasks
 func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
+	var (
+		page     = 0
+		per_page = 20
+	)
+
+	// pagination
+	if err := r.ParseForm(); err == nil {
+		if _page, err := strconv.Atoi(r.Form.Get("page")); err == nil {
+			page = _page
+		}
+		if _per_page, err := strconv.Atoi(r.Form.Get("per_page")); err == nil {
+			per_page = _per_page
+		}
+	}
+
 	api.RLock()
 	data := struct {
-		Size  int     `json:"size"`
-		Tasks []*Task `json:"tasks"`
+		Total int   `json:"total"`
+		Tasks Tasks `json:"tasks"`
 	}{
 		len(api.tasks),
-		api.tasks,
+		api.tasks.Slice(page, per_page),
 	}
 	api.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
@@ -147,7 +150,7 @@ func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
 	var (
 		vars   = mux.Vars(r)
 		id     = vars["id"]
-		tasks  = make([]*Task, 0)
+		tasks  = make(Tasks, 0)
 		states = make(map[string]*mesosproto.TaskState, len(api.states)-1)
 	)
 
@@ -276,7 +279,7 @@ func (api *API) ListenAndServe(port int) error {
 
 			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
 			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
+				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, r.RequestURI)
 				_fct(w, r)
 			})
 		}
