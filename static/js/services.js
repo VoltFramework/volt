@@ -14,6 +14,7 @@ voltServices.factory('Tasks', function ($resource) {
 				    switch (tasks[id].state) {
 				    case 0:
 					tasks[id].state="STARTING";
+					tasks[id].class="info";
 					break;
 				    case 1:
 					tasks[id].state="RUNNING";
@@ -37,6 +38,7 @@ voltServices.factory('Tasks', function ($resource) {
 					break;
 				    case 6:
 					tasks[id].state="STAGING";
+					tasks[id].class="default";
 					break;
 				    }
 				}
