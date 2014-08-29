@@ -46,54 +46,56 @@ voltControllers.controller('Charts', ['$scope', 'Metrics', '$interval', '$http',
 }]);
 
 voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', function ($scope, Tasks, $interval, $http) {
+    $scope.visibility = "hidden";
+    $scope.pageChanged = function() {
+	Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
+            $scope.tasks = d.tasks;
+	    $scope.totalItems = d.total;
+	    $scope.visibility = $scope.totalItems > 10 ? "visible" : "hidden";
+	});
+    };
 
-  $scope.pageChanged = function() {
-      Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
-          $scope.tasks = d.tasks;
-	  $scope.totalItems = d.total;
-      });
-  };
-
-  $scope.refreshInterval = 5;
-  $interval(function() {
-      Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
-          $scope.tasks = d.tasks;
-	  $scope.totalItems = d.total;
-      });
-  }, $scope.refreshInterval * 1000);
+    $scope.refreshInterval = 5;
+    $interval(function() {
+	Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
+            $scope.tasks = d.tasks;
+	    $scope.totalItems = d.total;
+	    $scope.visibility = $scope.totalItems > 10 ? "visible" : "hidden";
+	});
+    }, $scope.refreshInterval * 1000);
 
     Tasks.query({page:$scope.currentPage-1, per_page:10},function(d) {
         $scope.tasks = d.tasks;
 	$scope.totalItems = d.total;
-      });
+	$scope.visibility = $scope.totalItems > 10 ? "visible" : "hidden";
+    });
 
     $scope.trash = function (id) {
-      $http({method: 'DELETE', url: '/tasks/'+id}).success(function(data) {});
+	$http({method: 'DELETE', url: '/tasks/'+id}).success(function(data) {});
     };
     $scope.kill = function (id) {
-      $http({method: 'PUT', url: '/tasks/'+id+'/kill'}).success(function(data) {});
+	$http({method: 'PUT', url: '/tasks/'+id+'/kill'}).success(function(data) {});
     };
 }]);
 
 
 voltControllers.controller('Modal', function ($scope, $modal, $log) {
   $scope.task = {
-    cpus:'0.1',
-    mem:'32',
-    disk:'0',
-    docker_image:'busybox',
-    cmd:'/bin/ls'
+      cpus:'0.1',
+      mem:'32',
+      disk:'0',
+      docker_image:'busybox',
+      cmd:'/bin/ls'
   }
-  $scope.open = function (size) {
-
-    var modalInstance = $modal.open({
-      templateUrl: 'modal.html',
-      controller:  ModalCtrl,
-      size: size,
-      resolve: {task: function() {return $scope.task;}
-    }
-    });
-  };
+    $scope.open = function (size) {
+	var modalInstance = $modal.open({
+	    templateUrl: 'modal.html',
+	    controller:  ModalCtrl,
+	    size: size,
+	    resolve: {task: function() {return $scope.task;}
+		     }
+	});
+    };
 });
 
 var ModalCtrl = function ($scope, $modalInstance, $http, task) {
@@ -101,7 +103,7 @@ var ModalCtrl = function ($scope, $modalInstance, $http, task) {
     
     $scope.send = function () {
         $http({method: 'POST', url: '/tasks', data : $scope.task, headers:{'Accept': 'application/json', 'Content-Type': 'application/json; ; charset=UTF-8'}}).success(function(data) {
-    });
+	});
         $modalInstance.dismiss('send');
     };
 
@@ -111,39 +113,39 @@ var ModalCtrl = function ($scope, $modalInstance, $http, task) {
 };
 
 voltControllers.controller('File', function ($scope, $modal, $http) {
-  $scope.file = {};
+    $scope.file = {};
     $scope.refresh = function() {
 	$http.get('/tasks/'+$scope.file.id+'/file/'+$scope.file.name).
 	    success(function(data, status, headers, config) {
-		    $scope.file.content= data;
+		$scope.file.content= data;
 	    }).
 	    error(function(data, status, headers, config) {
-		    $scope.file.content= 'error';
+		$scope.file.content= 'error';
 	    });
     };
     $scope.open = function (name, id, size) {
 	$scope.file.name = name;
 	$scope.file.id = id;
 	$scope.refresh();
-    var modalInstance = $modal.open({
-      templateUrl: 'file.html',
-      controller:  FileCtrl,
-      size: size,
-      resolve: {file: function() {return $scope.file;}
-    }
-    });
-  };
+	var modalInstance = $modal.open({
+	    templateUrl: 'file.html',
+	    controller:  FileCtrl,
+	    size: size,
+	    resolve: {file: function() {return $scope.file;}
+		     }
+	});
+    };
 });
 
 var FileCtrl = function ($scope, $modalInstance, $http,file) {
     $scope.file = file;
-      $scope.refresh = function() {
+    $scope.refresh = function() {
 	$http.get('/tasks/'+$scope.file.id+'/file/'+$scope.file.name).
 	    success(function(data, status, headers, config) {
-		    $scope.file.content= data;
+		$scope.file.content= data;
 	    }).
 	    error(function(data, status, headers, config) {
-		    $scope.file.content= 'error';
+		$scope.file.content= 'error';
 	    });
     };
     $scope.close = function () {

@@ -86,7 +86,6 @@
     </div>
     
     <div class="container" style="margin-top:100px" ng-controller="Tasks">
-        <center><pagination total-items="totalItems" items-per-page="10" ng-model="currentPage" ng-change="pageChanged()"></pagination><center>
         <table class="table table-striped">
             <thead>
 	      <tr>
@@ -150,7 +149,7 @@
 		</tr>
             </tbody>
 	</table>
-        <center><pagination total-items="totalItems" items-per-page="10" ng-model="currentPage" ng-change="pageChanged()"></pagination><center>
+	<center><pagination class="pagination-sm" style="visibility:{{visibility}};" total-items="totalItems" items-per-page="10" max-size="10" ng-model="currentPage" ng-change="pageChanged()"></pagination><center>
     </div><!-- /.container -->
 
 
