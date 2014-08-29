@@ -17,9 +17,7 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, a
 		},
 		SlaveId:   offer.SlaveId,
 		Resources: resources,
-		Command: &mesosproto.CommandInfo{
-			Shell: proto.Bool(false),
-		},
+		Command:   &mesosproto.CommandInfo{},
 	}
 
 	// Set value only if provided
@@ -28,6 +26,7 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, a
 	}
 
 	// Set args only if they exist
+	fmt.Println(len(args))
 	if len(args) > 1 {
 		taskInfo.Command.Arguments = args[1:]
 	}
@@ -40,6 +39,7 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, a
 				Image: &image,
 			},
 		}
+		taskInfo.Command.Shell = proto.Bool(false)
 	}
 	return &taskInfo
 }
