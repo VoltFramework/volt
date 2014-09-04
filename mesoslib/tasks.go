@@ -26,7 +26,6 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, a
 	}
 
 	// Set args only if they exist
-	fmt.Println(len(args))
 	if len(args) > 1 {
 		taskInfo.Command.Arguments = args[1:]
 	}
