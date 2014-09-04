@@ -80,7 +80,10 @@ func main() {
 	}
 
 	// initialize MesosLib
-	m := mesoslib.NewMesosLib(master, log, frameworkInfo, ip)
+	m := mesoslib.NewMesosLib(master, log, frameworkInfo, ip, port)
+
+	// start the API
+	api.ListenAndServe(m, port)
 
 	// try to register against the master
 	if err := m.RegisterFramework(); err != nil {
@@ -95,10 +98,5 @@ func main() {
 		log.WithField("--ip", ip).Fatal("Registration timed out. --ip must route to this host from the mesos-master.")
 	}
 
-	go waitForSignals(m)
-
-	// once we are registered, start the API
-	if err := api.NewAPI(m).ListenAndServe(port); err != nil {
-		log.Fatal(err)
-	}
+	waitForSignals(m)
 }

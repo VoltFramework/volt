@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/gorilla/mux"
 )
 
 type MesosLib struct {
@@ -15,17 +16,19 @@ type MesosLib struct {
 	ip            string
 	port          int
 	frameworkInfo *mesosproto.FrameworkInfo
+	Router        *mux.Router
 
 	events events
 }
 
-func NewMesosLib(master string, log *logrus.Logger, frameworkInfo *mesosproto.FrameworkInfo, ip string) *MesosLib {
+func NewMesosLib(master string, log *logrus.Logger, frameworkInfo *mesosproto.FrameworkInfo, ip string, port int) *MesosLib {
 	m := &MesosLib{
 		Log:           log,
 		master:        master,
-		port:          9091,
 		frameworkInfo: frameworkInfo,
 		ip:            ip,
+		port:          port,
+		Router:        mux.NewRouter(),
 		events: events{
 			mesosproto.Event_REGISTERED: make(chan *mesosproto.Event, 64),
 			mesosproto.Event_OFFERS:     make(chan *mesosproto.Event, 64),
