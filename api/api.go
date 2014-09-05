@@ -248,7 +248,7 @@ func (api *API) handleStates() {
 // Register all the routes and then serve the API
 func (api *API) ListenAndServe(port int) error {
 	r := mux.NewRouter()
-	api.m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
+	api.m.Log.WithFields(logrus.Fields{"port": port}).Debug("Starting API...")
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"DELETE": {
@@ -276,7 +276,7 @@ func (api *API) ListenAndServe(port int) error {
 
 			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
 			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
+				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Debugf("[%s] %s", _method, _route)
 				_fct(w, r)
 			})
 		}

@@ -50,11 +50,33 @@ func waitForSignals(m *mesoslib.MesosLib) {
 	}
 }
 
+func setupLogger() error {
+	if debug {
+		log.Level = logrus.DebugLevel
+	}
+
+	if dsn := os.Getenv("SENTRY_DSN"); dsn != "" {
+		hook, err := newSentryHook(dsn, map[string]string{
+			"master": master,
+			"ip":     ip,
+			"user":   user,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		log.Hooks.Add(hook)
+	}
+
+	return nil
+}
+
 func main() {
 	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
 
-	if debug {
-		log.Level = logrus.DebugLevel
+	if err := setupLogger(); err != nil {
+		log.Fatal(err)
 	}
 
 	// initialize MesosLib
