@@ -89,7 +89,8 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	f := func() error {
 		var (
 			resources                               = api.m.FloatsToResources(task.Cpus, task.Mem, task.Disk)
-			combinedCpus, combinedMem, combinedDisk float64
+			cpusPerSlave, memPerSlave, diskPerSlave map[string]float64
+			offersPerSlave                          = map[string][]*mesosproto.Offer{}
 			combinedOffers                          = []*mesosproto.Offer{}
 		)
 
@@ -100,18 +101,23 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 			}
 			combinedOffers = append(combinedOffers, offers...)
 
-			combinedCpus, combinedMem, combinedDisk = 0, 0, 0
-			for i, offer := range combinedOffers {
-				cpus, mem, disk := api.m.ResourcesToFloats(offer.Resources)
-				combinedCpus += cpus
-				combinedMem += mem
-				combinedDisk += disk
+			cpusPerSlave, memPerSlave, diskPerSlave = make(map[string]float64, 0), make(map[string]float64, 0), make(map[string]float64, 0)
+			for _, offer := range combinedOffers {
+				var (
+					slaveId         = offer.SlaveId.GetValue()
+					cpus, mem, disk = api.m.ResourcesToFloats(offer.Resources)
+				)
+				cpusPerSlave[slaveId] += cpus
+				memPerSlave[slaveId] += mem
+				diskPerSlave[slaveId] += disk
+				offersPerSlave[slaveId] = append(offersPerSlave[slaveId], offer)
 
-				if combinedCpus >= task.Cpus && combinedMem >= task.Mem && combinedDisk >= task.Disk {
-					if i < len(offers)-1 {
-						api.m.DeclineOffers(combinedOffers[i+1:])
-					}
-					return api.m.LaunchTask(combinedOffers[:i+1], resources, &mesoslib.Task{
+				if cpusPerSlave[slaveId] >= task.Cpus && memPerSlave[slaveId] >= task.Mem && diskPerSlave[slaveId] >= task.Disk {
+					//					if i < len(offers)-1 {
+					//						api.m.DeclineOffers(combinedOffers[i+1:])
+					//					}
+					task.SlaveId = &slaveId
+					return api.m.LaunchTask(offersPerSlave[slaveId], resources, &mesoslib.Task{
 						ID:      task.ID,
 						Command: strings.Split(task.Command, " "),
 						Image:   task.DockerImage,
