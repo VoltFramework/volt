@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
@@ -41,6 +42,7 @@ type Task struct {
 
 	SlaveId *string               `json:"slave_id,string"`
 	State   *mesosproto.TaskState `json:"state,string"`
+	Volumes []*mesoslib.Volume    `json:"volumes,omitempty"`
 }
 
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
@@ -90,22 +92,33 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
+
 		if len(offers) > 0 {
 			task.SlaveId = offers[0].SlaveId.Value
-			return api.m.LaunchTask(offers[0], resources, task.Command, task.ID, task.DockerImage)
+
+			return api.m.LaunchTask(offers[0], resources, &mesoslib.Task{
+				ID:      task.ID,
+				Command: strings.Split(task.Command, " "),
+				Image:   task.DockerImage,
+				Volumes: task.Volumes,
+			})
 		}
+
 		return fmt.Errorf("No offers available")
 	}
+
 	if len(task.Files) > 0 {
 		if err := f(); err != nil {
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		files, err := api.m.ReadFile(task.ID, task.Files...)
 		if err != nil {
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(files); err != nil {
 			api.writeError(w, http.StatusInternalServerError, err.Error())
@@ -207,18 +220,18 @@ func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) handleStates() {
-	for {
-		event := <-api.m.GetEvent(mesosproto.Event_UPDATE)
+	for event := range api.m.GetEvent(mesosproto.Event_UPDATE) {
 		ID := event.Update.Status.TaskId.GetValue()
 
 		state, ok := api.states[ID]
 		if !ok {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
+
 			continue
 		}
 
 		*state = *event.Update.Status.State
-		switch *event.Update.Status.State {
+		switch *state {
 		case mesosproto.TaskState_TASK_STAGING:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task was registered.")
 		case mesosproto.TaskState_TASK_STARTING:

@@ -33,6 +33,24 @@ chmod +x volt
 ./volt --master=localhost:5050
 ```
 
+### API Requests
+
+#### Run a container with data volumes
+```json
+{
+    "cmd": "touch /data/volt",
+    "cpus": "0.1",
+    "mem": "32",
+    "docker_image": "busybox",
+    "volumes": [
+        {
+            "container_path":"/data",
+            "host_path":"/volumes/volt"
+        }
+    ]
+}
+```
+
 ## Creators
 
 **Victor Vieux**

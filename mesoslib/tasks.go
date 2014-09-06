@@ -2,18 +2,30 @@ package mesoslib
 
 import (
 	"fmt"
-	"strings"
 
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
 )
 
-func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, args []string, ID, image string) *mesosproto.TaskInfo {
+type Volume struct {
+	ContainerPath string `json:"container_path,omitempty"`
+	HostPath      string `json:"host_path,omitempty"`
+	Mode          string `json:"mode,omitempty"`
+}
+
+type Task struct {
+	ID      string
+	Command []string
+	Image   string
+	Volumes []*Volume
+}
+
+func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, task *Task) *mesosproto.TaskInfo {
 	taskInfo := mesosproto.TaskInfo{
-		Name: proto.String(fmt.Sprintf("volt-task-%s", ID)),
+		Name: proto.String(fmt.Sprintf("volt-task-%s", task.ID)),
 		TaskId: &mesosproto.TaskID{
-			Value: &ID,
+			Value: &task.ID,
 		},
 		SlaveId:   offer.SlaveId,
 		Resources: resources,
@@ -21,32 +33,51 @@ func createTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, a
 	}
 
 	// Set value only if provided
-	if args[0] != "" {
-		taskInfo.Command.Value = &args[0]
+	if task.Command[0] != "" {
+		taskInfo.Command.Value = &task.Command[0]
 	}
 
 	// Set args only if they exist
-	if len(args) > 1 {
-		taskInfo.Command.Arguments = args[1:]
+	if len(task.Command) > 1 {
+		taskInfo.Command.Arguments = task.Command[1:]
 	}
 
 	// Set the docker image if specified
-	if image != "" {
+	if task.Image != "" {
 		taskInfo.Container = &mesosproto.ContainerInfo{
 			Type: mesosproto.ContainerInfo_DOCKER.Enum(),
 			Docker: &mesosproto.ContainerInfo_DockerInfo{
-				Image: &image,
+				Image: &task.Image,
 			},
 		}
+
+		for _, v := range task.Volumes {
+			var (
+				vv   = v
+				mode = mesosproto.Volume_RW
+			)
+
+			if vv.Mode == "ro" {
+				mode = mesosproto.Volume_RO
+			}
+
+			taskInfo.Container.Volumes = append(taskInfo.Container.Volumes, &mesosproto.Volume{
+				ContainerPath: &vv.ContainerPath,
+				HostPath:      &vv.HostPath,
+				Mode:          &mode,
+			})
+		}
+
 		taskInfo.Command.Shell = proto.Bool(false)
 	}
+
 	return &taskInfo
 }
 
-func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, command, ID, image string) error {
-	m.Log.WithFields(logrus.Fields{"ID": ID, "command": command, "offerId": offer.Id, "dockerImage": image}).Info("Launching task...")
+func (m *MesosLib) LaunchTask(offer *mesosproto.Offer, resources []*mesosproto.Resource, task *Task) error {
+	m.Log.WithFields(logrus.Fields{"ID": task.ID, "command": task.Command, "offerId": offer.Id, "dockerImage": task.Image}).Info("Launching task...")
 
-	taskInfo := createTaskInfo(offer, resources, strings.Split(command, " "), ID, image)
+	taskInfo := createTaskInfo(offer, resources, task)
 
 	return m.send(&mesosproto.LaunchTasksMessage{
 		FrameworkId: m.frameworkInfo.Id,
