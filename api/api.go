@@ -25,14 +25,6 @@ type API struct {
 	states map[string]*mesosproto.TaskState
 }
 
-func NewAPI(m *mesoslib.MesosLib) *API {
-	return &API{
-		m:      m,
-		tasks:  make([]*Task, 0),
-		states: make(map[string]*mesosproto.TaskState, 0),
-	}
-}
-
 // Simple _ping endpoint, returns OK
 func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
@@ -246,9 +238,12 @@ func (api *API) handleStates() {
 }
 
 // Register all the routes and then serve the API
-func (api *API) ListenAndServe(port int) error {
-	r := mux.NewRouter()
-	api.m.Log.WithFields(logrus.Fields{"port": port}).Debug("Starting API...")
+func ListenAndServe(m *mesoslib.MesosLib, port int) {
+	api := &API{
+		m:      m,
+		tasks:  make([]*Task, 0),
+		states: make(map[string]*mesosproto.TaskState, 0),
+	}
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
 		"DELETE": {
@@ -274,14 +269,19 @@ func (api *API) ListenAndServe(port int) error {
 			_fct := fct
 			_method := method
 
-			api.m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering API route...")
-			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				api.m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Debugf("[%s] %s", _method, _route)
+			m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering Volt-API route...")
+			m.Router.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
 				_fct(w, r)
 			})
 		}
 	}
-	r.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
+	m.Router.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
 	go api.handleStates()
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
+	m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
+	go func() {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), m.Router); err != nil {
+			m.Log.Fatal(err)
+		}
+	}()
 }

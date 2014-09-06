@@ -1,7 +1,6 @@
 package mesoslib
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -13,12 +12,10 @@ import (
 )
 
 func (m *MesosLib) initAPI() {
-	r := mux.NewRouter()
-	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.Router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Warnf("[%s] %s: Not implemented", r.Method, r.RequestURI)
 		w.WriteHeader(http.StatusNotFound)
 	})
-	m.Log.WithFields(logrus.Fields{"port": m.port}).Debug("Starting MesosLib-API...")
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request, data []byte) error{
 		"POST": {
 			"/{scheduler}/mesos.internal.FrameworkRegisteredMessage": m.FrameworkRegisteredMessage,
@@ -35,7 +32,7 @@ func (m *MesosLib) initAPI() {
 			_method := method
 
 			m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering MesosLib-API route...")
-			r.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			m.Router.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr, "scheduler": mux.Vars(r)["scheduler"]}).Debugf("[%s] %s", _method, _route)
 
 				// extract request body
@@ -54,12 +51,6 @@ func (m *MesosLib) initAPI() {
 			})
 		}
 	}
-
-	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", m.port), r); err != nil {
-			m.Log.Fatalf("failed to start listening on port %d", m.port)
-		}
-	}()
 }
 
 // Endpoint called by the master upon error
