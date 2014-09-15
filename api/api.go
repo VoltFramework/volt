@@ -88,36 +88,29 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 	f := func() error {
 		var (
-			resources                               = api.m.FloatsToResources(task.Cpus, task.Mem, task.Disk)
-			cpusPerSlave, memPerSlave, diskPerSlave map[string]float64
-			offersPerSlave                          = map[string][]*mesosproto.Offer{}
-			combinedOffers                          = []*mesosproto.Offer{}
+			resourcesNeeded   = api.m.FloatsToResources(task.Cpus, task.Mem, task.Disk)
+			resourcesPerSlave map[string]mesoslib.Resources
+			offersPerSlave    = make(map[string][]*mesosproto.Offer, 0)
+			combinedOffers    = []*mesosproto.Offer{}
 		)
 
 		for {
-			offers, err := api.m.RequestOffers(resources)
+			offers, err := api.m.RequestOffers(resourcesNeeded)
 			if err != nil {
 				return err
 			}
 			combinedOffers = append(combinedOffers, offers...)
 
-			cpusPerSlave, memPerSlave, diskPerSlave = make(map[string]float64, 0), make(map[string]float64, 0), make(map[string]float64, 0)
+			resourcesPerSlave = make(map[string][]*mesosproto.Resource, 0)
 			for _, offer := range combinedOffers {
-				var (
-					slaveId         = offer.SlaveId.GetValue()
-					cpus, mem, disk = api.m.ResourcesToFloats(offer.Resources)
-				)
-				cpusPerSlave[slaveId] += cpus
-				memPerSlave[slaveId] += mem
-				diskPerSlave[slaveId] += disk
+				var slaveId = offer.SlaveId.GetValue()
+
+				resourcesPerSlave[slaveId] = mesoslib.CombineResources(resourcesPerSlave[slaveId], offer.Resources)
 				offersPerSlave[slaveId] = append(offersPerSlave[slaveId], offer)
 
-				if cpusPerSlave[slaveId] >= task.Cpus && memPerSlave[slaveId] >= task.Mem && diskPerSlave[slaveId] >= task.Disk {
-					//					if i < len(offers)-1 {
-					//						api.m.DeclineOffers(combinedOffers[i+1:])
-					//					}
+				if mesoslib.CompareResources(resourcesNeeded, resourcesPerSlave[slaveId]) {
 					task.SlaveId = &slaveId
-					return api.m.LaunchTask(offersPerSlave[slaveId], resources, &mesoslib.Task{
+					return api.m.LaunchTask(offersPerSlave[slaveId], resourcesNeeded, &mesoslib.Task{
 						ID:      task.ID,
 						Command: strings.Split(task.Command, " "),
 						Image:   task.DockerImage,
