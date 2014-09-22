@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -27,7 +28,7 @@ var (
 
 func init() {
 	flag.IntVar(&port, []string{"p", "-port"}, 8080, "Port to listen on for the API")
-	flag.StringVar(&master, []string{"m", "-master"}, "localhost:5050", "Master to connect to")
+	flag.StringVar(&master, []string{"m", "-master"}, "zk://localhost:2181/mesos", "Master to connect to")
 	flag.BoolVar(&debug, []string{"D", "-debug"}, false, "")
 	flag.StringVar(&user, []string{"u", "-user"}, "root", "User to execute tasks as")
 	flag.StringVar(&ip, []string{"-ip"}, "", "IP address to listen on [default: autodetect]")
@@ -73,10 +74,20 @@ func setupLogger() error {
 }
 
 func main() {
+	var err error
+
 	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
 
-	if err := setupLogger(); err != nil {
+	if err = setupLogger(); err != nil {
 		log.Fatal(err)
+	}
+
+	// get master from ZooKeeper if needed
+	if strings.HasPrefix(master, "zk://") {
+		master, err = getMasterFromZK()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// initialize MesosLib
