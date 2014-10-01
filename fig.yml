@@ -1,0 +1,23 @@
+master:
+  image: redjack/mesos-master
+  command: mesos-master --work_dir=/mesos
+  ports:
+    - 5050:5050
+
+slave:
+  image: redjack/mesos-slave
+  links:
+    - master:master
+  command: mesos-slave --master=master:5050 --containerizers=docker,mesos
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /usr/bin/docker:/bin/docker
+
+volt:
+  image: volt/volt
+  links:
+    - master:master
+  command: --master=master:5050
+  ports:
+    - 8080:8080
