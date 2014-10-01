@@ -14,7 +14,8 @@ type Task struct {
 	Files       []string `json:"files"`
 	DockerImage string   `json:"docker_image"`
 
-	SlaveId *string               `json:"slave_id,string"`
-	State   *mesosproto.TaskState `json:"state,string"`
-	Volumes []*mesoslib.Volume    `json:"volumes,omitempty"`
+	SlaveId       string                `json:"slave_id,string"`
+	SlaveHostname string                `json:"slave_hostname"`
+	State         *mesosproto.TaskState `json:"state,string"`
+	Volumes       []*mesoslib.Volume    `json:"volumes,omitempty"`
 }
