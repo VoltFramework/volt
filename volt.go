@@ -18,6 +18,7 @@ var (
 	master string
 	user   string
 	ip     string
+	zk     string
 	debug  bool
 
 	log             = logrus.New()
@@ -29,6 +30,7 @@ func init() {
 	flag.IntVar(&port, []string{"p", "-port"}, 8080, "Port to listen on for the API")
 	flag.StringVar(&master, []string{"m", "-master"}, "localhost:5050", "Master to connect to")
 	flag.BoolVar(&debug, []string{"D", "-debug"}, false, "")
+	flag.StringVar(&zk, []string{"-zk"}, "zk://localhost:2181/volt", "Zookeeper path to store volt informations")
 	flag.StringVar(&user, []string{"u", "-user"}, "root", "User to execute tasks as")
 	flag.StringVar(&ip, []string{"-ip"}, "", "IP address to listen on [default: autodetect]")
 
@@ -83,7 +85,7 @@ func main() {
 	m := mesoslib.NewMesosLib(master, log, frameworkInfo, ip, port)
 
 	// start the API
-	api.ListenAndServe(m, port)
+	api.ListenAndServe(m, port, zk)
 
 	// try to register against the master
 	if err := m.RegisterFramework(); err != nil {

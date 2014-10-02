@@ -14,6 +14,7 @@ import (
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/VoltFramework/volt/task"
+	"github.com/VoltFramework/volt/zookeeper"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
@@ -217,14 +218,14 @@ func (api *API) handleStates() {
 
 		task, err := api.registry.Fetch(ID)
 		if err != nil {
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
-
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Fetch task in registry")
 			continue
 		}
 
 		task.State = state
 		if err := api.registry.Update(ID, task); err != nil {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Update task state in registry")
+			continue
 		}
 
 		switch *state {
@@ -247,10 +248,14 @@ func (api *API) handleStates() {
 }
 
 // Register all the routes and then serve the API
-func ListenAndServe(m *mesoslib.MesosLib, port int) {
+func ListenAndServe(m *mesoslib.MesosLib, port int, zk string) {
 	api := &API{
-		m:        m,
-		registry: inmemory.New(),
+		m: m,
+	}
+	if zk == "" {
+		api.registry = inmemory.New()
+	} else {
+		api.registry = zookeeper.New(zk)
 	}
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
