@@ -8,41 +8,26 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/VoltFramework/volt/inmemory"
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/VoltFramework/volt/task"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
 
+var defaultState = mesosproto.TaskState_TASK_STAGING
+
 type API struct {
-	sync.RWMutex
-
-	m *mesoslib.MesosLib
-
-	tasks  []*Task
-	states map[string]*mesosproto.TaskState
+	m        *mesoslib.MesosLib
+	registry Registry
 }
 
 // Simple _ping endpoint, returns OK
 func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
-}
-
-type Task struct {
-	ID          string   `json:"id"`
-	Command     string   `json:"cmd"`
-	Cpus        float64  `json:"cpus,string"`
-	Disk        float64  `json:"disk,string"`
-	Mem         float64  `json:"mem,string"`
-	Files       []string `json:"files"`
-	DockerImage string   `json:"docker_image"`
-
-	SlaveId *string               `json:"slave_id,string"`
-	State   *mesosproto.TaskState `json:"state,string"`
-	Volumes []*mesoslib.Volume    `json:"volumes,omitempty"`
 }
 
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
@@ -64,10 +49,7 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var (
-		defaultState mesosproto.TaskState = mesosproto.TaskState_TASK_STAGING
-		task                              = Task{State: &defaultState}
-	)
+	task := &task.Task{State: &defaultState}
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		api.writeError(w, http.StatusBadRequest, err.Error())
@@ -80,11 +62,13 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	task.ID = hex.EncodeToString(id)
-	api.Lock()
-	api.tasks = append(api.tasks, &task)
-	api.states[task.ID] = task.State
-	api.Unlock()
+
+	if err := api.registry.Register(task.ID, task); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	f := func() error {
 		var resources = api.m.BuildResources(task.Cpus, task.Mem, task.Disk)
@@ -95,6 +79,10 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 		if len(offers) > 0 {
 			task.SlaveId = offers[0].SlaveId.Value
+
+			if err := api.registry.Update(task.ID, task); err != nil {
+				return err
+			}
 
 			return api.m.LaunchTask(offers[0], resources, &mesoslib.Task{
 				ID:      task.ID,
@@ -132,15 +120,20 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 // Endpoint to list all the tasks
 func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
-	api.RLock()
-	data := struct {
-		Size  int     `json:"size"`
-		Tasks []*Task `json:"tasks"`
-	}{
-		len(api.tasks),
-		api.tasks,
+	tasks, err := api.registry.Tasks()
+	if err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
-	api.RUnlock()
+
+	data := struct {
+		Size  int          `json:"size"`
+		Tasks []*task.Task `json:"tasks"`
+	}{
+		len(tasks),
+		tasks,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(&data); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
@@ -150,10 +143,8 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 // Endpoint to delete a task
 func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
 	var (
-		vars   = mux.Vars(r)
-		id     = vars["id"]
-		tasks  = make([]*Task, 0)
-		states = make(map[string]*mesosproto.TaskState, len(api.states)-1)
+		vars = mux.Vars(r)
+		id   = vars["id"]
 	)
 
 	if err := api.m.KillTask(id); err != nil {
@@ -161,16 +152,11 @@ func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Lock()
-	for _, task := range api.tasks {
-		if task != nil && task.ID != id {
-			tasks = append(tasks, task)
-			states[task.ID] = task.State
-		}
+	if err := api.registry.Delete(id); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
-	api.tasks = tasks
-	api.states = states
-	api.Unlock()
+
 	io.WriteString(w, "OK")
 }
 
@@ -223,14 +209,20 @@ func (api *API) handleStates() {
 	for event := range api.m.GetEvent(mesosproto.Event_UPDATE) {
 		ID := event.Update.Status.TaskId.GetValue()
 
-		state, ok := api.states[ID]
-		if !ok {
+		state := event.Update.Status.State
+
+		task, err := api.registry.Fetch(ID)
+		if err != nil {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
 
 			continue
 		}
 
-		*state = *event.Update.Status.State
+		task.State = state
+		if err := api.registry.Update(ID, task); err != nil {
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Update task state in registry")
+		}
+
 		switch *state {
 		case mesosproto.TaskState_TASK_STAGING:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task was registered.")
@@ -253,9 +245,8 @@ func (api *API) handleStates() {
 // Register all the routes and then serve the API
 func ListenAndServe(m *mesoslib.MesosLib, port int) {
 	api := &API{
-		m:      m,
-		tasks:  make([]*Task, 0),
-		states: make(map[string]*mesosproto.TaskState, 0),
+		m:        m,
+		registry: inmemory.New(),
 	}
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
