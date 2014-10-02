@@ -100,5 +100,10 @@ func (r *Registry) Update(id string, t *task.Task) error {
 }
 
 func (r *Registry) Delete(id string) error {
-	return r.conn.Delete(r.path+"/tasks/"+id, 0)
+	_, stat, err := r.conn.Get(r.path + "/tasks/" + id)
+	if err != nil {
+		return err
+	}
+
+	return r.conn.Delete(r.path+"/tasks/"+id, stat.Version)
 }
