@@ -9,43 +9,10 @@ import (
 )
 
 func (m *MesosLib) getSlavePidAndExecutorId(taskId string) (string, string, error) {
-	resp, err := http.Get("http://" + m.master + "/master/state.json")
+	data, err := m.getMasterState()
 	if err != nil {
 		return "", "", err
 	}
-
-	data := struct {
-		Frameworks []struct {
-			Tasks []struct {
-				ExecutorId string `json:"executor_id"`
-				Id         string
-				SlaveId    string `json:"slave_id"`
-			}
-			CompletedTasks []struct {
-				ExecutorId string `json:"executor_id"`
-				Id         string
-				SlaveId    string `json:"slave_id"`
-			} `json:"completed_tasks"`
-			Id string
-		}
-		CompletedFrameworks []struct {
-			CompletedTasks []struct {
-				ExecutorId string `json:"executor_id"`
-				Id         string
-				SlaveId    string `json:"slave_id"`
-			} `json:"completed_tasks"`
-			Id string
-		} `json:"completed_frameworks"`
-		Slaves []struct {
-			Pid string
-			Id  string
-		}
-	}{}
-
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", "", err
-	}
-	resp.Body.Close()
 
 	var (
 		executorId string
