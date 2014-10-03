@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/inmemory"
@@ -49,7 +51,7 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	task := &task.Task{State: &defaultState}
+	task := &task.Task{State: &defaultState, CreatedTime: time.Now()}
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		api.writeError(w, http.StatusBadRequest, err.Error())
@@ -125,6 +127,8 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	sort.Sort(task.ByCreatedTime(tasks))
 
 	data := struct {
 		Size  int          `json:"size"`
@@ -208,9 +212,7 @@ func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 func (api *API) handleStates() {
 	for event := range api.m.GetEvent(mesosproto.Event_UPDATE) {
 		ID := event.Update.Status.TaskId.GetValue()
-
-		state := event.Update.Status.State
-
+		now := time.Now()
 		task, err := api.registry.Fetch(ID)
 		if err != nil {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
@@ -218,12 +220,9 @@ func (api *API) handleStates() {
 			continue
 		}
 
-		task.State = state
-		if err := api.registry.Update(ID, task); err != nil {
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Update task state in registry")
-		}
+		task.State = event.Update.Status.State
 
-		switch *state {
+		switch *task.State {
 		case mesosproto.TaskState_TASK_STAGING:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task was registered.")
 		case mesosproto.TaskState_TASK_STARTING:
@@ -232,12 +231,19 @@ func (api *API) handleStates() {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is running.")
 		case mesosproto.TaskState_TASK_FINISHED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is finished.")
+			task.FinishedTime = &now
 		case mesosproto.TaskState_TASK_FAILED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task has failed.")
+			task.FinishedTime = &now
 		case mesosproto.TaskState_TASK_KILLED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was killed.")
+			task.FinishedTime = &now
 		case mesosproto.TaskState_TASK_LOST:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was lost.")
+		}
+
+		if err := api.registry.Update(ID, task); err != nil {
+			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Update task state in registry")
 		}
 	}
 }
