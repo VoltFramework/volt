@@ -28,7 +28,7 @@ To get started with the latest release, run the following commands on a mesos
 master node:
 
 ```
-wget https://github.com/voltframework/volt/releases/downloads/v1.0.0-alpha/volt
+wget https://github.com/voltframework/volt/releases/download/v1.0.0-alpha/volt
 chmod +x volt
 ./volt --master=localhost:5050
 ```
