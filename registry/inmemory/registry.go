@@ -1,14 +1,10 @@
 package inmemory
 
 import (
-	"errors"
 	"sync"
 
+	"github.com/VoltFramework/volt/registry"
 	"github.com/VoltFramework/volt/task"
-)
-
-var (
-	ErrNotExists = errors.New("task does not exist")
 )
 
 type Registry struct {
@@ -38,7 +34,7 @@ func (r *Registry) Fetch(id string) (*task.Task, error) {
 
 	t, exists := r.tasks[id]
 	if !exists {
-		return nil, ErrNotExists
+		return nil, registry.ErrNotExists
 	}
 
 	return t, nil

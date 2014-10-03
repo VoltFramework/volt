@@ -2,19 +2,18 @@ package zookeeper
 
 import (
 	"encoding/json"
-	"errors"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/VoltFramework/volt/registry"
 	"github.com/VoltFramework/volt/task"
 	"github.com/samuel/go-zookeeper/zk"
 )
 
 var (
-	ErrNotExists = errors.New("task does not exist")
-	flags        = int32(0)
-	acl          = zk.WorldACL(zk.PermAll)
+	flags = int32(0)
+	acl   = zk.WorldACL(zk.PermAll)
 )
 
 type Registry struct {
@@ -55,7 +54,7 @@ func (r *Registry) Register(id string, task *task.Task) error {
 func (r *Registry) Fetch(id string) (*task.Task, error) {
 	path := filepath.Join(r.path, "tasks", id)
 	if exists, _, _ := r.conn.Exists(path); !exists {
-		return nil, ErrNotExists
+		return nil, registry.ErrNotExists
 	}
 
 	data, _, err := r.conn.Get(path)

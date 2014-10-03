@@ -1,6 +1,14 @@
-package api
+package registry
 
-import "github.com/VoltFramework/volt/task"
+import (
+	"errors"
+
+	"github.com/VoltFramework/volt/task"
+)
+
+var (
+	ErrNotExists = errors.New("task not found in registry")
+)
 
 type Registry interface {
 	// Register a new task by ID in the configured registry

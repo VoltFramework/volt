@@ -10,11 +10,12 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/VoltFramework/volt/inmemory"
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/VoltFramework/volt/registry"
+	"github.com/VoltFramework/volt/registry/inmemory"
+	"github.com/VoltFramework/volt/registry/zookeeper"
 	"github.com/VoltFramework/volt/task"
-	"github.com/VoltFramework/volt/zookeeper"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
@@ -23,7 +24,7 @@ var defaultState = mesosproto.TaskState_TASK_STAGING
 
 type API struct {
 	m        *mesoslib.MesosLib
-	registry Registry
+	registry registry.Registry
 }
 
 // Simple _ping endpoint, returns OK
