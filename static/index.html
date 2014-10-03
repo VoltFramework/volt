@@ -97,6 +97,8 @@
 		<th>Docker Image</th>
 		<th>Command</th>
 		<th>SlaveID</th>
+		<th>Created</th>
+		<th>Finished</th>
 		<th>State</th>
 		<th>OUTPUTS</th>
 	    </tr>
@@ -119,6 +121,8 @@
 		<td></td>
 		<td></td>
 		<td></td>
+		<td></td>
+		<td></td>
 	      </tr>
               <tr ng-repeat="task in tasks">
 		  <td>{{task.id}}</td>
@@ -128,6 +132,8 @@
 		  <td>{{task.docker_image}}</td>
 		  <td>{{task.cmd}}</td>
 		  <td>{{task.slave_id}}</td>
+		  <td><span am-time-ago="task.created_time" am-preprocess="unix"></span></td>
+		  <td><span am-time-ago="task.finished_time" am-preprocess="unix"></span></td>
 		  <td><span class="label label-{{task.class}}">{{task.state}}</span></td>
 		  <td>
 		    <span class="label label-primary" ng-controller="File">
@@ -157,8 +163,10 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/moment.min.js"></script>
     <script src="js/angular.min.js"></script>
     <script src="js/angular-resource.min.js"></script>
+    <script src="js/angular-moment.min.js"></script>
     <script src="js/ui-bootstrap-tpls-0.11.0.min.js"></script>
     <script src="js/Chart.min.js"></script>
     <script src="js/angles.js"></script>

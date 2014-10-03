@@ -1,7 +1,8 @@
 var voltApp = angular.module('voltApp', [
   'voltControllers',
   'voltServices',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'angularMoment'
 ]);
 
 voltApp.config(['$httpProvider', function($httpProvider) {

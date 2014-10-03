@@ -51,7 +51,7 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	task := &task.Task{State: &defaultState, CreatedTime: time.Now()}
+	task := &task.Task{State: &defaultState, CreatedTime: time.Now().Unix()}
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		api.writeError(w, http.StatusBadRequest, err.Error())
@@ -212,7 +212,6 @@ func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
 func (api *API) handleStates() {
 	for event := range api.m.GetEvent(mesosproto.Event_UPDATE) {
 		ID := event.Update.Status.TaskId.GetValue()
-		now := time.Now()
 		task, err := api.registry.Fetch(ID)
 		if err != nil {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
@@ -231,13 +230,13 @@ func (api *API) handleStates() {
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is running.")
 		case mesosproto.TaskState_TASK_FINISHED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is finished.")
-			task.FinishedTime = &now
+			task.FinishedTime = time.Now().Unix()
 		case mesosproto.TaskState_TASK_FAILED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task has failed.")
-			task.FinishedTime = &now
+			task.FinishedTime = time.Now().Unix()
 		case mesosproto.TaskState_TASK_KILLED:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was killed.")
-			task.FinishedTime = &now
+			task.FinishedTime = time.Now().Unix()
 		case mesosproto.TaskState_TASK_LOST:
 			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was lost.")
 		}
