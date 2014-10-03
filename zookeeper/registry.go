@@ -3,6 +3,7 @@ package zookeeper
 import (
 	"encoding/json"
 	"errors"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ func New(uris string) *Registry {
 
 	if exists, _, _ := c.Exists(path); !exists {
 		c.Create(path, []byte("volt"), flags, acl)
-		c.Create(path+"/tasks", []byte("tasks"), flags, acl)
+		c.Create(filepath.Join(path, "tasks"), []byte("tasks"), flags, acl)
 	}
 	return &Registry{
 		conn: c,
@@ -47,16 +48,17 @@ func (r *Registry) Register(id string, task *task.Task) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.conn.Create(r.path+"/tasks/"+id, data, flags, acl)
+	_, err = r.conn.Create(filepath.Join(r.path, "tasks", id), data, flags, acl)
 	return err
 }
 
 func (r *Registry) Fetch(id string) (*task.Task, error) {
-	if exists, _, _ := r.conn.Exists(r.path + "/tasks/" + id); !exists {
+	path := filepath.Join(r.path, "tasks", id)
+	if exists, _, _ := r.conn.Exists(path); !exists {
 		return nil, ErrNotExists
 	}
 
-	data, _, err := r.conn.Get(r.path + "/tasks/" + id)
+	data, _, err := r.conn.Get(path)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +71,7 @@ func (r *Registry) Fetch(id string) (*task.Task, error) {
 func (r *Registry) Tasks() ([]*task.Task, error) {
 	var out []*task.Task
 
-	children, _, err := r.conn.Children(r.path + "/tasks")
+	children, _, err := r.conn.Children(filepath.Join(r.path, "tasks"))
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +87,8 @@ func (r *Registry) Tasks() ([]*task.Task, error) {
 }
 
 func (r *Registry) Update(id string, t *task.Task) error {
-	_, stat, err := r.conn.Get(r.path + "/tasks/" + id)
+	path := filepath.Join(r.path, "tasks", id)
+	_, stat, err := r.conn.Get(path)
 	if err != nil {
 		return err
 	}
@@ -94,16 +97,17 @@ func (r *Registry) Update(id string, t *task.Task) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.conn.Set(r.path+"/tasks/"+id, data, stat.Version)
+	_, err = r.conn.Set(path, data, stat.Version)
 
 	return err
 }
 
 func (r *Registry) Delete(id string) error {
-	_, stat, err := r.conn.Get(r.path + "/tasks/" + id)
+	path := filepath.Join(r.path, "tasks", id)
+	_, stat, err := r.conn.Get(path)
 	if err != nil {
 		return err
 	}
 
-	return r.conn.Delete(r.path+"/tasks/"+id, stat.Version)
+	return r.conn.Delete(path, stat.Version)
 }
