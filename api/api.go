@@ -78,7 +78,11 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(offers) > 0 {
-			task.SlaveId = offers[0].SlaveId.Value
+			task.SlaveId = *offers[0].SlaveId.Value
+			task.SlaveHostname, err = api.m.GetSlaveHostname(task.SlaveId)
+			if err != nil {
+				api.m.Log.Warnf("Error getting slave hostname: %v", err)
+			}
 
 			if err := api.registry.Update(task.ID, task); err != nil {
 				return err
