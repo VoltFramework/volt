@@ -43,6 +43,11 @@ It has these top-level messages:
 	RateLimits
 	Volume
 	ContainerInfo
+	Labels
+	Label
+	Port
+	Ports
+	DiscoveryInfo
 */
 package mesosproto
 
@@ -102,6 +107,7 @@ const (
 	TaskState_TASK_FAILED   TaskState = 3
 	TaskState_TASK_KILLED   TaskState = 4
 	TaskState_TASK_LOST     TaskState = 5
+	TaskState_TASK_ERROR    TaskState = 7
 )
 
 var TaskState_name = map[int32]string{
@@ -112,6 +118,7 @@ var TaskState_name = map[int32]string{
 	3: "TASK_FAILED",
 	4: "TASK_KILLED",
 	5: "TASK_LOST",
+	7: "TASK_ERROR",
 }
 var TaskState_value = map[string]int32{
 	"TASK_STAGING":  6,
@@ -121,6 +128,7 @@ var TaskState_value = map[string]int32{
 	"TASK_FAILED":   3,
 	"TASK_KILLED":   4,
 	"TASK_LOST":     5,
+	"TASK_ERROR":    7,
 }
 
 func (x TaskState) Enum() *TaskState {
@@ -176,6 +184,195 @@ func (x *Value_Type) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*x = Value_Type(value)
+	return nil
+}
+
+type Resource_ReservationType int32
+
+const (
+	Resource_STATIC  Resource_ReservationType = 0
+	Resource_DYNAMIC Resource_ReservationType = 1
+)
+
+var Resource_ReservationType_name = map[int32]string{
+	0: "STATIC",
+	1: "DYNAMIC",
+}
+var Resource_ReservationType_value = map[string]int32{
+	"STATIC":  0,
+	"DYNAMIC": 1,
+}
+
+func (x Resource_ReservationType) Enum() *Resource_ReservationType {
+	p := new(Resource_ReservationType)
+	*p = x
+	return p
+}
+func (x Resource_ReservationType) String() string {
+	return proto.EnumName(Resource_ReservationType_name, int32(x))
+}
+func (x *Resource_ReservationType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(Resource_ReservationType_value, data, "Resource_ReservationType")
+	if err != nil {
+		return err
+	}
+	*x = Resource_ReservationType(value)
+	return nil
+}
+
+type Offer_Operation_Type int32
+
+const (
+	Offer_Operation_LAUNCH    Offer_Operation_Type = 1
+	Offer_Operation_RESERVE   Offer_Operation_Type = 2
+	Offer_Operation_UNRESERVE Offer_Operation_Type = 3
+	Offer_Operation_CREATE    Offer_Operation_Type = 4
+	Offer_Operation_DESTROY   Offer_Operation_Type = 5
+)
+
+var Offer_Operation_Type_name = map[int32]string{
+	1: "LAUNCH",
+	2: "RESERVE",
+	3: "UNRESERVE",
+	4: "CREATE",
+	5: "DESTROY",
+}
+var Offer_Operation_Type_value = map[string]int32{
+	"LAUNCH":    1,
+	"RESERVE":   2,
+	"UNRESERVE": 3,
+	"CREATE":    4,
+	"DESTROY":   5,
+}
+
+func (x Offer_Operation_Type) Enum() *Offer_Operation_Type {
+	p := new(Offer_Operation_Type)
+	*p = x
+	return p
+}
+func (x Offer_Operation_Type) String() string {
+	return proto.EnumName(Offer_Operation_Type_name, int32(x))
+}
+func (x *Offer_Operation_Type) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(Offer_Operation_Type_value, data, "Offer_Operation_Type")
+	if err != nil {
+		return err
+	}
+	*x = Offer_Operation_Type(value)
+	return nil
+}
+
+type TaskStatus_Source int32
+
+const (
+	TaskStatus_SOURCE_MASTER   TaskStatus_Source = 0
+	TaskStatus_SOURCE_SLAVE    TaskStatus_Source = 1
+	TaskStatus_SOURCE_EXECUTOR TaskStatus_Source = 2
+)
+
+var TaskStatus_Source_name = map[int32]string{
+	0: "SOURCE_MASTER",
+	1: "SOURCE_SLAVE",
+	2: "SOURCE_EXECUTOR",
+}
+var TaskStatus_Source_value = map[string]int32{
+	"SOURCE_MASTER":   0,
+	"SOURCE_SLAVE":    1,
+	"SOURCE_EXECUTOR": 2,
+}
+
+func (x TaskStatus_Source) Enum() *TaskStatus_Source {
+	p := new(TaskStatus_Source)
+	*p = x
+	return p
+}
+func (x TaskStatus_Source) String() string {
+	return proto.EnumName(TaskStatus_Source_name, int32(x))
+}
+func (x *TaskStatus_Source) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(TaskStatus_Source_value, data, "TaskStatus_Source")
+	if err != nil {
+		return err
+	}
+	*x = TaskStatus_Source(value)
+	return nil
+}
+
+type TaskStatus_Reason int32
+
+const (
+	TaskStatus_REASON_COMMAND_EXECUTOR_FAILED TaskStatus_Reason = 0
+	TaskStatus_REASON_EXECUTOR_TERMINATED     TaskStatus_Reason = 1
+	TaskStatus_REASON_EXECUTOR_UNREGISTERED   TaskStatus_Reason = 2
+	TaskStatus_REASON_FRAMEWORK_REMOVED       TaskStatus_Reason = 3
+	TaskStatus_REASON_GC_ERROR                TaskStatus_Reason = 4
+	TaskStatus_REASON_INVALID_FRAMEWORKID     TaskStatus_Reason = 5
+	TaskStatus_REASON_INVALID_OFFERS          TaskStatus_Reason = 6
+	TaskStatus_REASON_MASTER_DISCONNECTED     TaskStatus_Reason = 7
+	TaskStatus_REASON_MEMORY_LIMIT            TaskStatus_Reason = 8
+	TaskStatus_REASON_RECONCILIATION          TaskStatus_Reason = 9
+	TaskStatus_REASON_SLAVE_DISCONNECTED      TaskStatus_Reason = 10
+	TaskStatus_REASON_SLAVE_REMOVED           TaskStatus_Reason = 11
+	TaskStatus_REASON_SLAVE_RESTARTED         TaskStatus_Reason = 12
+	TaskStatus_REASON_SLAVE_UNKNOWN           TaskStatus_Reason = 13
+	TaskStatus_REASON_TASK_INVALID            TaskStatus_Reason = 14
+	TaskStatus_REASON_TASK_UNAUTHORIZED       TaskStatus_Reason = 15
+	TaskStatus_REASON_TASK_UNKNOWN            TaskStatus_Reason = 16
+)
+
+var TaskStatus_Reason_name = map[int32]string{
+	0:  "REASON_COMMAND_EXECUTOR_FAILED",
+	1:  "REASON_EXECUTOR_TERMINATED",
+	2:  "REASON_EXECUTOR_UNREGISTERED",
+	3:  "REASON_FRAMEWORK_REMOVED",
+	4:  "REASON_GC_ERROR",
+	5:  "REASON_INVALID_FRAMEWORKID",
+	6:  "REASON_INVALID_OFFERS",
+	7:  "REASON_MASTER_DISCONNECTED",
+	8:  "REASON_MEMORY_LIMIT",
+	9:  "REASON_RECONCILIATION",
+	10: "REASON_SLAVE_DISCONNECTED",
+	11: "REASON_SLAVE_REMOVED",
+	12: "REASON_SLAVE_RESTARTED",
+	13: "REASON_SLAVE_UNKNOWN",
+	14: "REASON_TASK_INVALID",
+	15: "REASON_TASK_UNAUTHORIZED",
+	16: "REASON_TASK_UNKNOWN",
+}
+var TaskStatus_Reason_value = map[string]int32{
+	"REASON_COMMAND_EXECUTOR_FAILED": 0,
+	"REASON_EXECUTOR_TERMINATED":     1,
+	"REASON_EXECUTOR_UNREGISTERED":   2,
+	"REASON_FRAMEWORK_REMOVED":       3,
+	"REASON_GC_ERROR":                4,
+	"REASON_INVALID_FRAMEWORKID":     5,
+	"REASON_INVALID_OFFERS":          6,
+	"REASON_MASTER_DISCONNECTED":     7,
+	"REASON_MEMORY_LIMIT":            8,
+	"REASON_RECONCILIATION":          9,
+	"REASON_SLAVE_DISCONNECTED":      10,
+	"REASON_SLAVE_REMOVED":           11,
+	"REASON_SLAVE_RESTARTED":         12,
+	"REASON_SLAVE_UNKNOWN":           13,
+	"REASON_TASK_INVALID":            14,
+	"REASON_TASK_UNAUTHORIZED":       15,
+	"REASON_TASK_UNKNOWN":            16,
+}
+
+func (x TaskStatus_Reason) Enum() *TaskStatus_Reason {
+	p := new(TaskStatus_Reason)
+	*p = x
+	return p
+}
+func (x TaskStatus_Reason) String() string {
+	return proto.EnumName(TaskStatus_Reason_name, int32(x))
+}
+func (x *TaskStatus_Reason) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(TaskStatus_Reason_value, data, "TaskStatus_Reason")
+	if err != nil {
+		return err
+	}
+	*x = TaskStatus_Reason(value)
 	return nil
 }
 
@@ -252,13 +449,16 @@ type ContainerInfo_Type int32
 
 const (
 	ContainerInfo_DOCKER ContainerInfo_Type = 1
+	ContainerInfo_MESOS  ContainerInfo_Type = 2
 )
 
 var ContainerInfo_Type_name = map[int32]string{
 	1: "DOCKER",
+	2: "MESOS",
 }
 var ContainerInfo_Type_value = map[string]int32{
 	"DOCKER": 1,
+	"MESOS":  2,
 }
 
 func (x ContainerInfo_Type) Enum() *ContainerInfo_Type {
@@ -275,6 +475,78 @@ func (x *ContainerInfo_Type) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*x = ContainerInfo_Type(value)
+	return nil
+}
+
+type ContainerInfo_DockerInfo_Network int32
+
+const (
+	ContainerInfo_DockerInfo_HOST   ContainerInfo_DockerInfo_Network = 1
+	ContainerInfo_DockerInfo_BRIDGE ContainerInfo_DockerInfo_Network = 2
+	ContainerInfo_DockerInfo_NONE   ContainerInfo_DockerInfo_Network = 3
+)
+
+var ContainerInfo_DockerInfo_Network_name = map[int32]string{
+	1: "HOST",
+	2: "BRIDGE",
+	3: "NONE",
+}
+var ContainerInfo_DockerInfo_Network_value = map[string]int32{
+	"HOST":   1,
+	"BRIDGE": 2,
+	"NONE":   3,
+}
+
+func (x ContainerInfo_DockerInfo_Network) Enum() *ContainerInfo_DockerInfo_Network {
+	p := new(ContainerInfo_DockerInfo_Network)
+	*p = x
+	return p
+}
+func (x ContainerInfo_DockerInfo_Network) String() string {
+	return proto.EnumName(ContainerInfo_DockerInfo_Network_name, int32(x))
+}
+func (x *ContainerInfo_DockerInfo_Network) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ContainerInfo_DockerInfo_Network_value, data, "ContainerInfo_DockerInfo_Network")
+	if err != nil {
+		return err
+	}
+	*x = ContainerInfo_DockerInfo_Network(value)
+	return nil
+}
+
+type DiscoveryInfo_Visibility int32
+
+const (
+	DiscoveryInfo_FRAMEWORK DiscoveryInfo_Visibility = 0
+	DiscoveryInfo_CLUSTER   DiscoveryInfo_Visibility = 1
+	DiscoveryInfo_EXTERNAL  DiscoveryInfo_Visibility = 2
+)
+
+var DiscoveryInfo_Visibility_name = map[int32]string{
+	0: "FRAMEWORK",
+	1: "CLUSTER",
+	2: "EXTERNAL",
+}
+var DiscoveryInfo_Visibility_value = map[string]int32{
+	"FRAMEWORK": 0,
+	"CLUSTER":   1,
+	"EXTERNAL":  2,
+}
+
+func (x DiscoveryInfo_Visibility) Enum() *DiscoveryInfo_Visibility {
+	p := new(DiscoveryInfo_Visibility)
+	*p = x
+	return p
+}
+func (x DiscoveryInfo_Visibility) String() string {
+	return proto.EnumName(DiscoveryInfo_Visibility_name, int32(x))
+}
+func (x *DiscoveryInfo_Visibility) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(DiscoveryInfo_Visibility_value, data, "DiscoveryInfo_Visibility")
+	if err != nil {
+		return err
+	}
+	*x = DiscoveryInfo_Visibility(value)
 	return nil
 }
 
@@ -383,6 +655,7 @@ type FrameworkInfo struct {
 	Role             *string      `protobuf:"bytes,6,opt,name=role,def=*" json:"role,omitempty"`
 	Hostname         *string      `protobuf:"bytes,7,opt,name=hostname" json:"hostname,omitempty"`
 	Principal        *string      `protobuf:"bytes,8,opt,name=principal" json:"principal,omitempty"`
+	WebuiUrl         *string      `protobuf:"bytes,9,opt,name=webui_url" json:"webui_url,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
 
@@ -446,6 +719,13 @@ func (m *FrameworkInfo) GetHostname() string {
 func (m *FrameworkInfo) GetPrincipal() string {
 	if m != nil && m.Principal != nil {
 		return *m.Principal
+	}
+	return ""
+}
+
+func (m *FrameworkInfo) GetWebuiUrl() string {
+	if m != nil && m.WebuiUrl != nil {
+		return *m.WebuiUrl
 	}
 	return ""
 }
@@ -687,6 +967,7 @@ type ExecutorInfo struct {
 	Name             *string        `protobuf:"bytes,9,opt,name=name" json:"name,omitempty"`
 	Source           *string        `protobuf:"bytes,10,opt,name=source" json:"source,omitempty"`
 	Data             []byte         `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+	Discovery        *DiscoveryInfo `protobuf:"bytes,12,opt,name=discovery" json:"discovery,omitempty"`
 	XXX_unrecognized []byte         `json:"-"`
 }
 
@@ -750,6 +1031,13 @@ func (m *ExecutorInfo) GetData() []byte {
 	return nil
 }
 
+func (m *ExecutorInfo) GetDiscovery() *DiscoveryInfo {
+	if m != nil {
+		return m.Discovery
+	}
+	return nil
+}
+
 type MasterInfo struct {
 	Id               *string `protobuf:"bytes,1,req,name=id" json:"id,omitempty"`
 	Ip               *uint32 `protobuf:"varint,2,req,name=ip" json:"ip,omitempty"`
@@ -807,8 +1095,6 @@ type SlaveInfo struct {
 	Attributes       []*Attribute `protobuf:"bytes,5,rep,name=attributes" json:"attributes,omitempty"`
 	Id               *SlaveID     `protobuf:"bytes,6,opt,name=id" json:"id,omitempty"`
 	Checkpoint       *bool        `protobuf:"varint,7,opt,name=checkpoint,def=0" json:"checkpoint,omitempty"`
-	WebuiHostname    *string      `protobuf:"bytes,2,opt,name=webui_hostname" json:"webui_hostname,omitempty"`
-	WebuiPort        *int32       `protobuf:"varint,4,opt,name=webui_port,def=8081" json:"webui_port,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
 
@@ -818,7 +1104,6 @@ func (*SlaveInfo) ProtoMessage()    {}
 
 const Default_SlaveInfo_Port int32 = 5051
 const Default_SlaveInfo_Checkpoint bool = false
-const Default_SlaveInfo_WebuiPort int32 = 8081
 
 func (m *SlaveInfo) GetHostname() string {
 	if m != nil && m.Hostname != nil {
@@ -862,22 +1147,8 @@ func (m *SlaveInfo) GetCheckpoint() bool {
 	return Default_SlaveInfo_Checkpoint
 }
 
-func (m *SlaveInfo) GetWebuiHostname() string {
-	if m != nil && m.WebuiHostname != nil {
-		return *m.WebuiHostname
-	}
-	return ""
-}
-
-func (m *SlaveInfo) GetWebuiPort() int32 {
-	if m != nil && m.WebuiPort != nil {
-		return *m.WebuiPort
-	}
-	return Default_SlaveInfo_WebuiPort
-}
-
 type Value struct {
-	Type             *Value_Type   `protobuf:"varint,1,req,name=type,enum=mesos.Value_Type" json:"type,omitempty"`
+	Type             *Value_Type   `protobuf:"varint,1,req,name=type,enum=Value_Type" json:"type,omitempty"`
 	Scalar           *Value_Scalar `protobuf:"bytes,2,opt,name=scalar" json:"scalar,omitempty"`
 	Ranges           *Value_Ranges `protobuf:"bytes,3,opt,name=ranges" json:"ranges,omitempty"`
 	Set              *Value_Set    `protobuf:"bytes,4,opt,name=set" json:"set,omitempty"`
@@ -1014,7 +1285,7 @@ func (m *Value_Text) GetValue() string {
 
 type Attribute struct {
 	Name             *string       `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
-	Type             *Value_Type   `protobuf:"varint,2,req,name=type,enum=mesos.Value_Type" json:"type,omitempty"`
+	Type             *Value_Type   `protobuf:"varint,2,req,name=type,enum=Value_Type" json:"type,omitempty"`
 	Scalar           *Value_Scalar `protobuf:"bytes,3,opt,name=scalar" json:"scalar,omitempty"`
 	Ranges           *Value_Ranges `protobuf:"bytes,4,opt,name=ranges" json:"ranges,omitempty"`
 	Set              *Value_Set    `protobuf:"bytes,6,opt,name=set" json:"set,omitempty"`
@@ -1069,13 +1340,15 @@ func (m *Attribute) GetText() *Value_Text {
 }
 
 type Resource struct {
-	Name             *string       `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
-	Type             *Value_Type   `protobuf:"varint,2,req,name=type,enum=mesos.Value_Type" json:"type,omitempty"`
-	Scalar           *Value_Scalar `protobuf:"bytes,3,opt,name=scalar" json:"scalar,omitempty"`
-	Ranges           *Value_Ranges `protobuf:"bytes,4,opt,name=ranges" json:"ranges,omitempty"`
-	Set              *Value_Set    `protobuf:"bytes,5,opt,name=set" json:"set,omitempty"`
-	Role             *string       `protobuf:"bytes,6,opt,name=role,def=*" json:"role,omitempty"`
-	XXX_unrecognized []byte        `json:"-"`
+	Name             *string                   `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
+	Type             *Value_Type               `protobuf:"varint,2,req,name=type,enum=Value_Type" json:"type,omitempty"`
+	Scalar           *Value_Scalar             `protobuf:"bytes,3,opt,name=scalar" json:"scalar,omitempty"`
+	Ranges           *Value_Ranges             `protobuf:"bytes,4,opt,name=ranges" json:"ranges,omitempty"`
+	Set              *Value_Set                `protobuf:"bytes,5,opt,name=set" json:"set,omitempty"`
+	Role             *string                   `protobuf:"bytes,6,opt,name=role,def=*" json:"role,omitempty"`
+	ReservationType  *Resource_ReservationType `protobuf:"varint,8,opt,name=reservation_type,enum=Resource_ReservationType,def=0" json:"reservation_type,omitempty"`
+	Disk             *Resource_DiskInfo        `protobuf:"bytes,7,opt,name=disk" json:"disk,omitempty"`
+	XXX_unrecognized []byte                    `json:"-"`
 }
 
 func (m *Resource) Reset()         { *m = Resource{} }
@@ -1083,6 +1356,7 @@ func (m *Resource) String() string { return proto.CompactTextString(m) }
 func (*Resource) ProtoMessage()    {}
 
 const Default_Resource_Role string = "*"
+const Default_Resource_ReservationType Resource_ReservationType = Resource_STATIC
 
 func (m *Resource) GetName() string {
 	if m != nil && m.Name != nil {
@@ -1126,29 +1400,91 @@ func (m *Resource) GetRole() string {
 	return Default_Resource_Role
 }
 
+func (m *Resource) GetReservationType() Resource_ReservationType {
+	if m != nil && m.ReservationType != nil {
+		return *m.ReservationType
+	}
+	return Default_Resource_ReservationType
+}
+
+func (m *Resource) GetDisk() *Resource_DiskInfo {
+	if m != nil {
+		return m.Disk
+	}
+	return nil
+}
+
+type Resource_DiskInfo struct {
+	Persistence      *Resource_DiskInfo_Persistence `protobuf:"bytes,1,opt,name=persistence" json:"persistence,omitempty"`
+	Volume           *Volume                        `protobuf:"bytes,2,opt,name=volume" json:"volume,omitempty"`
+	XXX_unrecognized []byte                         `json:"-"`
+}
+
+func (m *Resource_DiskInfo) Reset()         { *m = Resource_DiskInfo{} }
+func (m *Resource_DiskInfo) String() string { return proto.CompactTextString(m) }
+func (*Resource_DiskInfo) ProtoMessage()    {}
+
+func (m *Resource_DiskInfo) GetPersistence() *Resource_DiskInfo_Persistence {
+	if m != nil {
+		return m.Persistence
+	}
+	return nil
+}
+
+func (m *Resource_DiskInfo) GetVolume() *Volume {
+	if m != nil {
+		return m.Volume
+	}
+	return nil
+}
+
+type Resource_DiskInfo_Persistence struct {
+	Id               *string `protobuf:"bytes,1,req,name=id" json:"id,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Resource_DiskInfo_Persistence) Reset()         { *m = Resource_DiskInfo_Persistence{} }
+func (m *Resource_DiskInfo_Persistence) String() string { return proto.CompactTextString(m) }
+func (*Resource_DiskInfo_Persistence) ProtoMessage()    {}
+
+func (m *Resource_DiskInfo_Persistence) GetId() string {
+	if m != nil && m.Id != nil {
+		return *m.Id
+	}
+	return ""
+}
+
 type ResourceStatistics struct {
-	Timestamp             *float64        `protobuf:"fixed64,1,req,name=timestamp" json:"timestamp,omitempty"`
-	CpusUserTimeSecs      *float64        `protobuf:"fixed64,2,opt,name=cpus_user_time_secs" json:"cpus_user_time_secs,omitempty"`
-	CpusSystemTimeSecs    *float64        `protobuf:"fixed64,3,opt,name=cpus_system_time_secs" json:"cpus_system_time_secs,omitempty"`
-	CpusLimit             *float64        `protobuf:"fixed64,4,opt,name=cpus_limit" json:"cpus_limit,omitempty"`
-	CpusNrPeriods         *uint32         `protobuf:"varint,7,opt,name=cpus_nr_periods" json:"cpus_nr_periods,omitempty"`
-	CpusNrThrottled       *uint32         `protobuf:"varint,8,opt,name=cpus_nr_throttled" json:"cpus_nr_throttled,omitempty"`
-	CpusThrottledTimeSecs *float64        `protobuf:"fixed64,9,opt,name=cpus_throttled_time_secs" json:"cpus_throttled_time_secs,omitempty"`
-	MemRssBytes           *uint64         `protobuf:"varint,5,opt,name=mem_rss_bytes" json:"mem_rss_bytes,omitempty"`
-	MemLimitBytes         *uint64         `protobuf:"varint,6,opt,name=mem_limit_bytes" json:"mem_limit_bytes,omitempty"`
-	MemFileBytes          *uint64         `protobuf:"varint,10,opt,name=mem_file_bytes" json:"mem_file_bytes,omitempty"`
-	MemAnonBytes          *uint64         `protobuf:"varint,11,opt,name=mem_anon_bytes" json:"mem_anon_bytes,omitempty"`
-	MemMappedFileBytes    *uint64         `protobuf:"varint,12,opt,name=mem_mapped_file_bytes" json:"mem_mapped_file_bytes,omitempty"`
-	Perf                  *PerfStatistics `protobuf:"bytes,13,opt,name=perf" json:"perf,omitempty"`
-	NetRxPackets          *uint64         `protobuf:"varint,14,opt,name=net_rx_packets" json:"net_rx_packets,omitempty"`
-	NetRxBytes            *uint64         `protobuf:"varint,15,opt,name=net_rx_bytes" json:"net_rx_bytes,omitempty"`
-	NetRxErrors           *uint64         `protobuf:"varint,16,opt,name=net_rx_errors" json:"net_rx_errors,omitempty"`
-	NetRxDropped          *uint64         `protobuf:"varint,17,opt,name=net_rx_dropped" json:"net_rx_dropped,omitempty"`
-	NetTxPackets          *uint64         `protobuf:"varint,18,opt,name=net_tx_packets" json:"net_tx_packets,omitempty"`
-	NetTxBytes            *uint64         `protobuf:"varint,19,opt,name=net_tx_bytes" json:"net_tx_bytes,omitempty"`
-	NetTxErrors           *uint64         `protobuf:"varint,20,opt,name=net_tx_errors" json:"net_tx_errors,omitempty"`
-	NetTxDropped          *uint64         `protobuf:"varint,21,opt,name=net_tx_dropped" json:"net_tx_dropped,omitempty"`
-	XXX_unrecognized      []byte          `json:"-"`
+	Timestamp                 *float64        `protobuf:"fixed64,1,req,name=timestamp" json:"timestamp,omitempty"`
+	CpusUserTimeSecs          *float64        `protobuf:"fixed64,2,opt,name=cpus_user_time_secs" json:"cpus_user_time_secs,omitempty"`
+	CpusSystemTimeSecs        *float64        `protobuf:"fixed64,3,opt,name=cpus_system_time_secs" json:"cpus_system_time_secs,omitempty"`
+	CpusLimit                 *float64        `protobuf:"fixed64,4,opt,name=cpus_limit" json:"cpus_limit,omitempty"`
+	CpusNrPeriods             *uint32         `protobuf:"varint,7,opt,name=cpus_nr_periods" json:"cpus_nr_periods,omitempty"`
+	CpusNrThrottled           *uint32         `protobuf:"varint,8,opt,name=cpus_nr_throttled" json:"cpus_nr_throttled,omitempty"`
+	CpusThrottledTimeSecs     *float64        `protobuf:"fixed64,9,opt,name=cpus_throttled_time_secs" json:"cpus_throttled_time_secs,omitempty"`
+	MemRssBytes               *uint64         `protobuf:"varint,5,opt,name=mem_rss_bytes" json:"mem_rss_bytes,omitempty"`
+	MemLimitBytes             *uint64         `protobuf:"varint,6,opt,name=mem_limit_bytes" json:"mem_limit_bytes,omitempty"`
+	MemFileBytes              *uint64         `protobuf:"varint,10,opt,name=mem_file_bytes" json:"mem_file_bytes,omitempty"`
+	MemAnonBytes              *uint64         `protobuf:"varint,11,opt,name=mem_anon_bytes" json:"mem_anon_bytes,omitempty"`
+	MemMappedFileBytes        *uint64         `protobuf:"varint,12,opt,name=mem_mapped_file_bytes" json:"mem_mapped_file_bytes,omitempty"`
+	DiskLimitBytes            *uint64         `protobuf:"varint,26,opt,name=disk_limit_bytes" json:"disk_limit_bytes,omitempty"`
+	DiskUsedBytes             *uint64         `protobuf:"varint,27,opt,name=disk_used_bytes" json:"disk_used_bytes,omitempty"`
+	Perf                      *PerfStatistics `protobuf:"bytes,13,opt,name=perf" json:"perf,omitempty"`
+	NetRxPackets              *uint64         `protobuf:"varint,14,opt,name=net_rx_packets" json:"net_rx_packets,omitempty"`
+	NetRxBytes                *uint64         `protobuf:"varint,15,opt,name=net_rx_bytes" json:"net_rx_bytes,omitempty"`
+	NetRxErrors               *uint64         `protobuf:"varint,16,opt,name=net_rx_errors" json:"net_rx_errors,omitempty"`
+	NetRxDropped              *uint64         `protobuf:"varint,17,opt,name=net_rx_dropped" json:"net_rx_dropped,omitempty"`
+	NetTxPackets              *uint64         `protobuf:"varint,18,opt,name=net_tx_packets" json:"net_tx_packets,omitempty"`
+	NetTxBytes                *uint64         `protobuf:"varint,19,opt,name=net_tx_bytes" json:"net_tx_bytes,omitempty"`
+	NetTxErrors               *uint64         `protobuf:"varint,20,opt,name=net_tx_errors" json:"net_tx_errors,omitempty"`
+	NetTxDropped              *uint64         `protobuf:"varint,21,opt,name=net_tx_dropped" json:"net_tx_dropped,omitempty"`
+	NetTcpRttMicrosecsP50     *float64        `protobuf:"fixed64,22,opt,name=net_tcp_rtt_microsecs_p50" json:"net_tcp_rtt_microsecs_p50,omitempty"`
+	NetTcpRttMicrosecsP90     *float64        `protobuf:"fixed64,23,opt,name=net_tcp_rtt_microsecs_p90" json:"net_tcp_rtt_microsecs_p90,omitempty"`
+	NetTcpRttMicrosecsP95     *float64        `protobuf:"fixed64,24,opt,name=net_tcp_rtt_microsecs_p95" json:"net_tcp_rtt_microsecs_p95,omitempty"`
+	NetTcpRttMicrosecsP99     *float64        `protobuf:"fixed64,25,opt,name=net_tcp_rtt_microsecs_p99" json:"net_tcp_rtt_microsecs_p99,omitempty"`
+	NetTcpActiveConnections   *float64        `protobuf:"fixed64,28,opt,name=net_tcp_active_connections" json:"net_tcp_active_connections,omitempty"`
+	NetTcpTimeWaitConnections *float64        `protobuf:"fixed64,29,opt,name=net_tcp_time_wait_connections" json:"net_tcp_time_wait_connections,omitempty"`
+	XXX_unrecognized          []byte          `json:"-"`
 }
 
 func (m *ResourceStatistics) Reset()         { *m = ResourceStatistics{} }
@@ -1239,6 +1575,20 @@ func (m *ResourceStatistics) GetMemMappedFileBytes() uint64 {
 	return 0
 }
 
+func (m *ResourceStatistics) GetDiskLimitBytes() uint64 {
+	if m != nil && m.DiskLimitBytes != nil {
+		return *m.DiskLimitBytes
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetDiskUsedBytes() uint64 {
+	if m != nil && m.DiskUsedBytes != nil {
+		return *m.DiskUsedBytes
+	}
+	return 0
+}
+
 func (m *ResourceStatistics) GetPerf() *PerfStatistics {
 	if m != nil {
 		return m.Perf
@@ -1298,6 +1648,48 @@ func (m *ResourceStatistics) GetNetTxErrors() uint64 {
 func (m *ResourceStatistics) GetNetTxDropped() uint64 {
 	if m != nil && m.NetTxDropped != nil {
 		return *m.NetTxDropped
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpRttMicrosecsP50() float64 {
+	if m != nil && m.NetTcpRttMicrosecsP50 != nil {
+		return *m.NetTcpRttMicrosecsP50
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpRttMicrosecsP90() float64 {
+	if m != nil && m.NetTcpRttMicrosecsP90 != nil {
+		return *m.NetTcpRttMicrosecsP90
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpRttMicrosecsP95() float64 {
+	if m != nil && m.NetTcpRttMicrosecsP95 != nil {
+		return *m.NetTcpRttMicrosecsP95
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpRttMicrosecsP99() float64 {
+	if m != nil && m.NetTcpRttMicrosecsP99 != nil {
+		return *m.NetTcpRttMicrosecsP99
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpActiveConnections() float64 {
+	if m != nil && m.NetTcpActiveConnections != nil {
+		return *m.NetTcpActiveConnections
+	}
+	return 0
+}
+
+func (m *ResourceStatistics) GetNetTcpTimeWaitConnections() float64 {
+	if m != nil && m.NetTcpTimeWaitConnections != nil {
+		return *m.NetTcpTimeWaitConnections
 	}
 	return 0
 }
@@ -1878,6 +2270,142 @@ func (m *Offer) GetExecutorIds() []*ExecutorID {
 	return nil
 }
 
+type Offer_Operation struct {
+	Type             *Offer_Operation_Type      `protobuf:"varint,1,req,name=type,enum=Offer_Operation_Type" json:"type,omitempty"`
+	Launch           *Offer_Operation_Launch    `protobuf:"bytes,2,opt,name=launch" json:"launch,omitempty"`
+	Reserve          *Offer_Operation_Reserve   `protobuf:"bytes,3,opt,name=reserve" json:"reserve,omitempty"`
+	Unreserve        *Offer_Operation_Unreserve `protobuf:"bytes,4,opt,name=unreserve" json:"unreserve,omitempty"`
+	Create           *Offer_Operation_Create    `protobuf:"bytes,5,opt,name=create" json:"create,omitempty"`
+	Destroy          *Offer_Operation_Destroy   `protobuf:"bytes,6,opt,name=destroy" json:"destroy,omitempty"`
+	XXX_unrecognized []byte                     `json:"-"`
+}
+
+func (m *Offer_Operation) Reset()         { *m = Offer_Operation{} }
+func (m *Offer_Operation) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation) ProtoMessage()    {}
+
+func (m *Offer_Operation) GetType() Offer_Operation_Type {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return Offer_Operation_LAUNCH
+}
+
+func (m *Offer_Operation) GetLaunch() *Offer_Operation_Launch {
+	if m != nil {
+		return m.Launch
+	}
+	return nil
+}
+
+func (m *Offer_Operation) GetReserve() *Offer_Operation_Reserve {
+	if m != nil {
+		return m.Reserve
+	}
+	return nil
+}
+
+func (m *Offer_Operation) GetUnreserve() *Offer_Operation_Unreserve {
+	if m != nil {
+		return m.Unreserve
+	}
+	return nil
+}
+
+func (m *Offer_Operation) GetCreate() *Offer_Operation_Create {
+	if m != nil {
+		return m.Create
+	}
+	return nil
+}
+
+func (m *Offer_Operation) GetDestroy() *Offer_Operation_Destroy {
+	if m != nil {
+		return m.Destroy
+	}
+	return nil
+}
+
+type Offer_Operation_Launch struct {
+	TaskInfos        []*TaskInfo `protobuf:"bytes,1,rep,name=task_infos" json:"task_infos,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Offer_Operation_Launch) Reset()         { *m = Offer_Operation_Launch{} }
+func (m *Offer_Operation_Launch) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation_Launch) ProtoMessage()    {}
+
+func (m *Offer_Operation_Launch) GetTaskInfos() []*TaskInfo {
+	if m != nil {
+		return m.TaskInfos
+	}
+	return nil
+}
+
+type Offer_Operation_Reserve struct {
+	Resources        []*Resource `protobuf:"bytes,1,rep,name=resources" json:"resources,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Offer_Operation_Reserve) Reset()         { *m = Offer_Operation_Reserve{} }
+func (m *Offer_Operation_Reserve) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation_Reserve) ProtoMessage()    {}
+
+func (m *Offer_Operation_Reserve) GetResources() []*Resource {
+	if m != nil {
+		return m.Resources
+	}
+	return nil
+}
+
+type Offer_Operation_Unreserve struct {
+	Resources        []*Resource `protobuf:"bytes,1,rep,name=resources" json:"resources,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Offer_Operation_Unreserve) Reset()         { *m = Offer_Operation_Unreserve{} }
+func (m *Offer_Operation_Unreserve) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation_Unreserve) ProtoMessage()    {}
+
+func (m *Offer_Operation_Unreserve) GetResources() []*Resource {
+	if m != nil {
+		return m.Resources
+	}
+	return nil
+}
+
+type Offer_Operation_Create struct {
+	Volumes          []*Resource `protobuf:"bytes,1,rep,name=volumes" json:"volumes,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Offer_Operation_Create) Reset()         { *m = Offer_Operation_Create{} }
+func (m *Offer_Operation_Create) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation_Create) ProtoMessage()    {}
+
+func (m *Offer_Operation_Create) GetVolumes() []*Resource {
+	if m != nil {
+		return m.Volumes
+	}
+	return nil
+}
+
+type Offer_Operation_Destroy struct {
+	Volumes          []*Resource `protobuf:"bytes,1,rep,name=volumes" json:"volumes,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Offer_Operation_Destroy) Reset()         { *m = Offer_Operation_Destroy{} }
+func (m *Offer_Operation_Destroy) String() string { return proto.CompactTextString(m) }
+func (*Offer_Operation_Destroy) ProtoMessage()    {}
+
+func (m *Offer_Operation_Destroy) GetVolumes() []*Resource {
+	if m != nil {
+		return m.Volumes
+	}
+	return nil
+}
+
 type TaskInfo struct {
 	Name             *string        `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
 	TaskId           *TaskID        `protobuf:"bytes,2,req,name=task_id" json:"task_id,omitempty"`
@@ -1888,6 +2416,8 @@ type TaskInfo struct {
 	Container        *ContainerInfo `protobuf:"bytes,9,opt,name=container" json:"container,omitempty"`
 	Data             []byte         `protobuf:"bytes,6,opt,name=data" json:"data,omitempty"`
 	HealthCheck      *HealthCheck   `protobuf:"bytes,8,opt,name=health_check" json:"health_check,omitempty"`
+	Labels           *Labels        `protobuf:"bytes,10,opt,name=labels" json:"labels,omitempty"`
+	Discovery        *DiscoveryInfo `protobuf:"bytes,11,opt,name=discovery" json:"discovery,omitempty"`
 	XXX_unrecognized []byte         `json:"-"`
 }
 
@@ -1958,16 +2488,32 @@ func (m *TaskInfo) GetHealthCheck() *HealthCheck {
 	return nil
 }
 
+func (m *TaskInfo) GetLabels() *Labels {
+	if m != nil {
+		return m.Labels
+	}
+	return nil
+}
+
+func (m *TaskInfo) GetDiscovery() *DiscoveryInfo {
+	if m != nil {
+		return m.Discovery
+	}
+	return nil
+}
+
 type TaskStatus struct {
-	TaskId           *TaskID     `protobuf:"bytes,1,req,name=task_id" json:"task_id,omitempty"`
-	State            *TaskState  `protobuf:"varint,2,req,name=state,enum=mesos.TaskState" json:"state,omitempty"`
-	Message          *string     `protobuf:"bytes,4,opt,name=message" json:"message,omitempty"`
-	Data             []byte      `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
-	SlaveId          *SlaveID    `protobuf:"bytes,5,opt,name=slave_id" json:"slave_id,omitempty"`
-	ExecutorId       *ExecutorID `protobuf:"bytes,7,opt,name=executor_id" json:"executor_id,omitempty"`
-	Timestamp        *float64    `protobuf:"fixed64,6,opt,name=timestamp" json:"timestamp,omitempty"`
-	Healthy          *bool       `protobuf:"varint,8,opt,name=healthy" json:"healthy,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
+	TaskId           *TaskID            `protobuf:"bytes,1,req,name=task_id" json:"task_id,omitempty"`
+	State            *TaskState         `protobuf:"varint,2,req,name=state,enum=TaskState" json:"state,omitempty"`
+	Message          *string            `protobuf:"bytes,4,opt,name=message" json:"message,omitempty"`
+	Source           *TaskStatus_Source `protobuf:"varint,9,opt,name=source,enum=TaskStatus_Source" json:"source,omitempty"`
+	Reason           *TaskStatus_Reason `protobuf:"varint,10,opt,name=reason,enum=TaskStatus_Reason" json:"reason,omitempty"`
+	Data             []byte             `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	SlaveId          *SlaveID           `protobuf:"bytes,5,opt,name=slave_id" json:"slave_id,omitempty"`
+	ExecutorId       *ExecutorID        `protobuf:"bytes,7,opt,name=executor_id" json:"executor_id,omitempty"`
+	Timestamp        *float64           `protobuf:"fixed64,6,opt,name=timestamp" json:"timestamp,omitempty"`
+	Healthy          *bool              `protobuf:"varint,8,opt,name=healthy" json:"healthy,omitempty"`
+	XXX_unrecognized []byte             `json:"-"`
 }
 
 func (m *TaskStatus) Reset()         { *m = TaskStatus{} }
@@ -1993,6 +2539,20 @@ func (m *TaskStatus) GetMessage() string {
 		return *m.Message
 	}
 	return ""
+}
+
+func (m *TaskStatus) GetSource() TaskStatus_Source {
+	if m != nil && m.Source != nil {
+		return *m.Source
+	}
+	return TaskStatus_SOURCE_MASTER
+}
+
+func (m *TaskStatus) GetReason() TaskStatus_Reason {
+	if m != nil && m.Reason != nil {
+		return *m.Reason
+	}
+	return TaskStatus_REASON_COMMAND_EXECUTOR_FAILED
 }
 
 func (m *TaskStatus) GetData() []byte {
@@ -2177,7 +2737,7 @@ func (m *ACL) String() string { return proto.CompactTextString(m) }
 func (*ACL) ProtoMessage()    {}
 
 type ACL_Entity struct {
-	Type             *ACL_Entity_Type `protobuf:"varint,1,opt,name=type,enum=mesos.ACL_Entity_Type,def=0" json:"type,omitempty"`
+	Type             *ACL_Entity_Type `protobuf:"varint,1,opt,name=type,enum=ACL_Entity_Type,def=0" json:"type,omitempty"`
 	Values           []string         `protobuf:"bytes,2,rep,name=values" json:"values,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
 }
@@ -2383,7 +2943,7 @@ func (m *RateLimits) GetAggregateDefaultCapacity() uint64 {
 type Volume struct {
 	ContainerPath    *string      `protobuf:"bytes,1,req,name=container_path" json:"container_path,omitempty"`
 	HostPath         *string      `protobuf:"bytes,2,opt,name=host_path" json:"host_path,omitempty"`
-	Mode             *Volume_Mode `protobuf:"varint,3,req,name=mode,enum=mesos.Volume_Mode" json:"mode,omitempty"`
+	Mode             *Volume_Mode `protobuf:"varint,3,req,name=mode,enum=Volume_Mode" json:"mode,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
 
@@ -2413,8 +2973,9 @@ func (m *Volume) GetMode() Volume_Mode {
 }
 
 type ContainerInfo struct {
-	Type             *ContainerInfo_Type       `protobuf:"varint,1,req,name=type,enum=mesos.ContainerInfo_Type" json:"type,omitempty"`
+	Type             *ContainerInfo_Type       `protobuf:"varint,1,req,name=type,enum=ContainerInfo_Type" json:"type,omitempty"`
 	Volumes          []*Volume                 `protobuf:"bytes,2,rep,name=volumes" json:"volumes,omitempty"`
+	Hostname         *string                   `protobuf:"bytes,4,opt,name=hostname" json:"hostname,omitempty"`
 	Docker           *ContainerInfo_DockerInfo `protobuf:"bytes,3,opt,name=docker" json:"docker,omitempty"`
 	XXX_unrecognized []byte                    `json:"-"`
 }
@@ -2437,6 +2998,13 @@ func (m *ContainerInfo) GetVolumes() []*Volume {
 	return nil
 }
 
+func (m *ContainerInfo) GetHostname() string {
+	if m != nil && m.Hostname != nil {
+		return *m.Hostname
+	}
+	return ""
+}
+
 func (m *ContainerInfo) GetDocker() *ContainerInfo_DockerInfo {
 	if m != nil {
 		return m.Docker
@@ -2445,13 +3013,21 @@ func (m *ContainerInfo) GetDocker() *ContainerInfo_DockerInfo {
 }
 
 type ContainerInfo_DockerInfo struct {
-	Image            *string `protobuf:"bytes,1,req,name=image" json:"image,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Image            *string                                 `protobuf:"bytes,1,req,name=image" json:"image,omitempty"`
+	Network          *ContainerInfo_DockerInfo_Network       `protobuf:"varint,2,opt,name=network,enum=ContainerInfo_DockerInfo_Network,def=1" json:"network,omitempty"`
+	PortMappings     []*ContainerInfo_DockerInfo_PortMapping `protobuf:"bytes,3,rep,name=port_mappings" json:"port_mappings,omitempty"`
+	Privileged       *bool                                   `protobuf:"varint,4,opt,name=privileged,def=0" json:"privileged,omitempty"`
+	Parameters       []*Parameter                            `protobuf:"bytes,5,rep,name=parameters" json:"parameters,omitempty"`
+	ForcePullImage   *bool                                   `protobuf:"varint,6,opt,name=force_pull_image" json:"force_pull_image,omitempty"`
+	XXX_unrecognized []byte                                  `json:"-"`
 }
 
 func (m *ContainerInfo_DockerInfo) Reset()         { *m = ContainerInfo_DockerInfo{} }
 func (m *ContainerInfo_DockerInfo) String() string { return proto.CompactTextString(m) }
 func (*ContainerInfo_DockerInfo) ProtoMessage()    {}
+
+const Default_ContainerInfo_DockerInfo_Network ContainerInfo_DockerInfo_Network = ContainerInfo_DockerInfo_HOST
+const Default_ContainerInfo_DockerInfo_Privileged bool = false
 
 func (m *ContainerInfo_DockerInfo) GetImage() string {
 	if m != nil && m.Image != nil {
@@ -2460,11 +3036,236 @@ func (m *ContainerInfo_DockerInfo) GetImage() string {
 	return ""
 }
 
+func (m *ContainerInfo_DockerInfo) GetNetwork() ContainerInfo_DockerInfo_Network {
+	if m != nil && m.Network != nil {
+		return *m.Network
+	}
+	return Default_ContainerInfo_DockerInfo_Network
+}
+
+func (m *ContainerInfo_DockerInfo) GetPortMappings() []*ContainerInfo_DockerInfo_PortMapping {
+	if m != nil {
+		return m.PortMappings
+	}
+	return nil
+}
+
+func (m *ContainerInfo_DockerInfo) GetPrivileged() bool {
+	if m != nil && m.Privileged != nil {
+		return *m.Privileged
+	}
+	return Default_ContainerInfo_DockerInfo_Privileged
+}
+
+func (m *ContainerInfo_DockerInfo) GetParameters() []*Parameter {
+	if m != nil {
+		return m.Parameters
+	}
+	return nil
+}
+
+func (m *ContainerInfo_DockerInfo) GetForcePullImage() bool {
+	if m != nil && m.ForcePullImage != nil {
+		return *m.ForcePullImage
+	}
+	return false
+}
+
+type ContainerInfo_DockerInfo_PortMapping struct {
+	HostPort         *uint32 `protobuf:"varint,1,req,name=host_port" json:"host_port,omitempty"`
+	ContainerPort    *uint32 `protobuf:"varint,2,req,name=container_port" json:"container_port,omitempty"`
+	Protocol         *string `protobuf:"bytes,3,opt,name=protocol" json:"protocol,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ContainerInfo_DockerInfo_PortMapping) Reset()         { *m = ContainerInfo_DockerInfo_PortMapping{} }
+func (m *ContainerInfo_DockerInfo_PortMapping) String() string { return proto.CompactTextString(m) }
+func (*ContainerInfo_DockerInfo_PortMapping) ProtoMessage()    {}
+
+func (m *ContainerInfo_DockerInfo_PortMapping) GetHostPort() uint32 {
+	if m != nil && m.HostPort != nil {
+		return *m.HostPort
+	}
+	return 0
+}
+
+func (m *ContainerInfo_DockerInfo_PortMapping) GetContainerPort() uint32 {
+	if m != nil && m.ContainerPort != nil {
+		return *m.ContainerPort
+	}
+	return 0
+}
+
+func (m *ContainerInfo_DockerInfo_PortMapping) GetProtocol() string {
+	if m != nil && m.Protocol != nil {
+		return *m.Protocol
+	}
+	return ""
+}
+
+type Labels struct {
+	Labels           []*Label `protobuf:"bytes,1,rep,name=labels" json:"labels,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *Labels) Reset()         { *m = Labels{} }
+func (m *Labels) String() string { return proto.CompactTextString(m) }
+func (*Labels) ProtoMessage()    {}
+
+func (m *Labels) GetLabels() []*Label {
+	if m != nil {
+		return m.Labels
+	}
+	return nil
+}
+
+type Label struct {
+	Key              *string `protobuf:"bytes,1,req,name=key" json:"key,omitempty"`
+	Value            *string `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Label) Reset()         { *m = Label{} }
+func (m *Label) String() string { return proto.CompactTextString(m) }
+func (*Label) ProtoMessage()    {}
+
+func (m *Label) GetKey() string {
+	if m != nil && m.Key != nil {
+		return *m.Key
+	}
+	return ""
+}
+
+func (m *Label) GetValue() string {
+	if m != nil && m.Value != nil {
+		return *m.Value
+	}
+	return ""
+}
+
+type Port struct {
+	Number           *uint32 `protobuf:"varint,1,req,name=number" json:"number,omitempty"`
+	Name             *string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	Protocol         *string `protobuf:"bytes,3,opt,name=protocol" json:"protocol,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Port) Reset()         { *m = Port{} }
+func (m *Port) String() string { return proto.CompactTextString(m) }
+func (*Port) ProtoMessage()    {}
+
+func (m *Port) GetNumber() uint32 {
+	if m != nil && m.Number != nil {
+		return *m.Number
+	}
+	return 0
+}
+
+func (m *Port) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+func (m *Port) GetProtocol() string {
+	if m != nil && m.Protocol != nil {
+		return *m.Protocol
+	}
+	return ""
+}
+
+type Ports struct {
+	Ports            []*Port `protobuf:"bytes,1,rep,name=ports" json:"ports,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Ports) Reset()         { *m = Ports{} }
+func (m *Ports) String() string { return proto.CompactTextString(m) }
+func (*Ports) ProtoMessage()    {}
+
+func (m *Ports) GetPorts() []*Port {
+	if m != nil {
+		return m.Ports
+	}
+	return nil
+}
+
+type DiscoveryInfo struct {
+	Visibility       *DiscoveryInfo_Visibility `protobuf:"varint,1,req,name=visibility,enum=DiscoveryInfo_Visibility" json:"visibility,omitempty"`
+	Name             *string                   `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	Environment      *string                   `protobuf:"bytes,3,opt,name=environment" json:"environment,omitempty"`
+	Location         *string                   `protobuf:"bytes,4,opt,name=location" json:"location,omitempty"`
+	Version          *string                   `protobuf:"bytes,5,opt,name=version" json:"version,omitempty"`
+	Ports            *Ports                    `protobuf:"bytes,6,opt,name=ports" json:"ports,omitempty"`
+	Labels           *Labels                   `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	XXX_unrecognized []byte                    `json:"-"`
+}
+
+func (m *DiscoveryInfo) Reset()         { *m = DiscoveryInfo{} }
+func (m *DiscoveryInfo) String() string { return proto.CompactTextString(m) }
+func (*DiscoveryInfo) ProtoMessage()    {}
+
+func (m *DiscoveryInfo) GetVisibility() DiscoveryInfo_Visibility {
+	if m != nil && m.Visibility != nil {
+		return *m.Visibility
+	}
+	return DiscoveryInfo_FRAMEWORK
+}
+
+func (m *DiscoveryInfo) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+func (m *DiscoveryInfo) GetEnvironment() string {
+	if m != nil && m.Environment != nil {
+		return *m.Environment
+	}
+	return ""
+}
+
+func (m *DiscoveryInfo) GetLocation() string {
+	if m != nil && m.Location != nil {
+		return *m.Location
+	}
+	return ""
+}
+
+func (m *DiscoveryInfo) GetVersion() string {
+	if m != nil && m.Version != nil {
+		return *m.Version
+	}
+	return ""
+}
+
+func (m *DiscoveryInfo) GetPorts() *Ports {
+	if m != nil {
+		return m.Ports
+	}
+	return nil
+}
+
+func (m *DiscoveryInfo) GetLabels() *Labels {
+	if m != nil {
+		return m.Labels
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterEnum("mesos.Status", Status_name, Status_value)
-	proto.RegisterEnum("mesos.TaskState", TaskState_name, TaskState_value)
-	proto.RegisterEnum("mesos.Value_Type", Value_Type_name, Value_Type_value)
-	proto.RegisterEnum("mesos.ACL_Entity_Type", ACL_Entity_Type_name, ACL_Entity_Type_value)
-	proto.RegisterEnum("mesos.Volume_Mode", Volume_Mode_name, Volume_Mode_value)
-	proto.RegisterEnum("mesos.ContainerInfo_Type", ContainerInfo_Type_name, ContainerInfo_Type_value)
+	proto.RegisterEnum("Status", Status_name, Status_value)
+	proto.RegisterEnum("TaskState", TaskState_name, TaskState_value)
+	proto.RegisterEnum("Value_Type", Value_Type_name, Value_Type_value)
+	proto.RegisterEnum("Resource_ReservationType", Resource_ReservationType_name, Resource_ReservationType_value)
+	proto.RegisterEnum("Offer_Operation_Type", Offer_Operation_Type_name, Offer_Operation_Type_value)
+	proto.RegisterEnum("TaskStatus_Source", TaskStatus_Source_name, TaskStatus_Source_value)
+	proto.RegisterEnum("TaskStatus_Reason", TaskStatus_Reason_name, TaskStatus_Reason_value)
+	proto.RegisterEnum("ACL_Entity_Type", ACL_Entity_Type_name, ACL_Entity_Type_value)
+	proto.RegisterEnum("Volume_Mode", Volume_Mode_name, Volume_Mode_value)
+	proto.RegisterEnum("ContainerInfo_Type", ContainerInfo_Type_name, ContainerInfo_Type_value)
+	proto.RegisterEnum("ContainerInfo_DockerInfo_Network", ContainerInfo_DockerInfo_Network_name, ContainerInfo_DockerInfo_Network_value)
+	proto.RegisterEnum("DiscoveryInfo_Visibility", DiscoveryInfo_Visibility_name, DiscoveryInfo_Visibility_value)
 }

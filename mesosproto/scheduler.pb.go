@@ -15,7 +15,6 @@ It has these top-level messages:
 package mesosproto
 
 import proto "code.google.com/p/goprotobuf/proto"
-
 import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -80,8 +79,9 @@ const (
 	Call_REREGISTER  Call_Type = 2
 	Call_UNREGISTER  Call_Type = 3
 	Call_REQUEST     Call_Type = 4
-	Call_DECLINE     Call_Type = 5
 	Call_REVIVE      Call_Type = 6
+	Call_DECLINE     Call_Type = 5
+	Call_ACCEPT      Call_Type = 12
 	Call_LAUNCH      Call_Type = 7
 	Call_KILL        Call_Type = 8
 	Call_ACKNOWLEDGE Call_Type = 9
@@ -94,8 +94,9 @@ var Call_Type_name = map[int32]string{
 	2:  "REREGISTER",
 	3:  "UNREGISTER",
 	4:  "REQUEST",
-	5:  "DECLINE",
 	6:  "REVIVE",
+	5:  "DECLINE",
+	12: "ACCEPT",
 	7:  "LAUNCH",
 	8:  "KILL",
 	9:  "ACKNOWLEDGE",
@@ -107,8 +108,9 @@ var Call_Type_value = map[string]int32{
 	"REREGISTER":  2,
 	"UNREGISTER":  3,
 	"REQUEST":     4,
-	"DECLINE":     5,
 	"REVIVE":      6,
+	"DECLINE":     5,
+	"ACCEPT":      12,
 	"LAUNCH":      7,
 	"KILL":        8,
 	"ACKNOWLEDGE": 9,
@@ -134,7 +136,7 @@ func (x *Call_Type) UnmarshalJSON(data []byte) error {
 }
 
 type Event struct {
-	Type             *Event_Type         `protobuf:"varint,1,req,name=type,enum=mesos.scheduler.Event_Type" json:"type,omitempty"`
+	Type             *Event_Type         `protobuf:"varint,1,req,name=type,enum=scheduler.Event_Type" json:"type,omitempty"`
 	Registered       *Event_Registered   `protobuf:"bytes,2,opt,name=registered" json:"registered,omitempty"`
 	Reregistered     *Event_Reregistered `protobuf:"bytes,3,opt,name=reregistered" json:"reregistered,omitempty"`
 	Offers           *Event_Offers       `protobuf:"bytes,4,opt,name=offers" json:"offers,omitempty"`
@@ -399,9 +401,10 @@ func (m *Event_Error) GetMessage() string {
 
 type Call struct {
 	FrameworkInfo    *FrameworkInfo    `protobuf:"bytes,1,req,name=framework_info" json:"framework_info,omitempty"`
-	Type             *Call_Type        `protobuf:"varint,2,req,name=type,enum=mesos.scheduler.Call_Type" json:"type,omitempty"`
+	Type             *Call_Type        `protobuf:"varint,2,req,name=type,enum=scheduler.Call_Type" json:"type,omitempty"`
 	Request          *Call_Request     `protobuf:"bytes,3,opt,name=request" json:"request,omitempty"`
 	Decline          *Call_Decline     `protobuf:"bytes,4,opt,name=decline" json:"decline,omitempty"`
+	Accept           *Call_Accept      `protobuf:"bytes,10,opt,name=accept" json:"accept,omitempty"`
 	Launch           *Call_Launch      `protobuf:"bytes,5,opt,name=launch" json:"launch,omitempty"`
 	Kill             *Call_Kill        `protobuf:"bytes,6,opt,name=kill" json:"kill,omitempty"`
 	Acknowledge      *Call_Acknowledge `protobuf:"bytes,7,opt,name=acknowledge" json:"acknowledge,omitempty"`
@@ -438,6 +441,13 @@ func (m *Call) GetRequest() *Call_Request {
 func (m *Call) GetDecline() *Call_Decline {
 	if m != nil {
 		return m.Decline
+	}
+	return nil
+}
+
+func (m *Call) GetAccept() *Call_Accept {
+	if m != nil {
+		return m.Accept
 	}
 	return nil
 }
@@ -511,6 +521,38 @@ func (m *Call_Decline) GetOfferIds() []*OfferID {
 }
 
 func (m *Call_Decline) GetFilters() *Filters {
+	if m != nil {
+		return m.Filters
+	}
+	return nil
+}
+
+type Call_Accept struct {
+	OfferIds         []*OfferID         `protobuf:"bytes,1,rep,name=offer_ids" json:"offer_ids,omitempty"`
+	Operations       []*Offer_Operation `protobuf:"bytes,2,rep,name=operations" json:"operations,omitempty"`
+	Filters          *Filters           `protobuf:"bytes,3,opt,name=filters" json:"filters,omitempty"`
+	XXX_unrecognized []byte             `json:"-"`
+}
+
+func (m *Call_Accept) Reset()         { *m = Call_Accept{} }
+func (m *Call_Accept) String() string { return proto.CompactTextString(m) }
+func (*Call_Accept) ProtoMessage()    {}
+
+func (m *Call_Accept) GetOfferIds() []*OfferID {
+	if m != nil {
+		return m.OfferIds
+	}
+	return nil
+}
+
+func (m *Call_Accept) GetOperations() []*Offer_Operation {
+	if m != nil {
+		return m.Operations
+	}
+	return nil
+}
+
+func (m *Call_Accept) GetFilters() *Filters {
 	if m != nil {
 		return m.Filters
 	}
@@ -646,6 +688,6 @@ func (m *Call_Message) GetData() []byte {
 }
 
 func init() {
-	proto.RegisterEnum("mesos.scheduler.Event_Type", Event_Type_name, Event_Type_value)
-	proto.RegisterEnum("mesos.scheduler.Call_Type", Call_Type_name, Call_Type_value)
+	proto.RegisterEnum("scheduler.Event_Type", Event_Type_name, Event_Type_value)
+	proto.RegisterEnum("scheduler.Call_Type", Call_Type_name, Call_Type_value)
 }

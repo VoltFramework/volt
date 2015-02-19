@@ -18,12 +18,12 @@
 
 import "mesos.proto";
 
-package mesos.internal;
+package mesos;
 
 // TODO(benh): Provide comments for each of these messages. Also,
 // consider splitting these messages into different "packages" which
 // represent which messages get handled by which components (e.g., the
-// "mesos.internal.executor" package includes messages that the
+// "mesos.executor" package includes messages that the
 // executor handles).
 
 
@@ -44,10 +44,25 @@ message Task {
   required FrameworkID framework_id = 3;
   optional ExecutorID executor_id = 4;
   required SlaveID slave_id = 5;
-  required TaskState state = 6;
+  required TaskState state = 6; // Latest state of the task.
   repeated Resource resources = 7;
   repeated TaskStatus statuses = 8;
+
+  // These fields correspond to the state and uuid of the latest
+  // status update forwarded to the master.
+  // NOTE: Either both the fields must be set or both must be unset.
+  optional TaskState status_update_state = 9;
+  optional bytes status_update_uuid = 10;
+
+  optional Labels labels = 11;
+
+  // Service discovery information for the task. It is not interpreted
+  // or acted upon by Mesos. It is up to a service discovery system
+  // to use this information as needed and to handle tasks without
+  // service discovery information.
+  optional DiscoveryInfo discovery = 12;
 }
+
 
 // Describes a role, which are used to group frameworks for allocation
 // decisions, depending on the allocation policy being used.
@@ -58,6 +73,7 @@ message RoleInfo {
 }
 
 
+// TODO(vinod): Create a new UUID message type.
 message StatusUpdate {
   required FrameworkID framework_id = 1;
   optional ExecutorID executor_id = 2;
@@ -65,6 +81,13 @@ message StatusUpdate {
   required TaskStatus status = 4;
   required double timestamp = 5;
   required bytes uuid = 6;
+
+  // This corresponds to the latest state of the task according to the
+  // slave. Note that this state might be different than the state in
+  // 'status' because status update manager queues updates. In other
+  // words, 'status' corresponds to the update at top of the queue and
+  // 'latest_state' corresponds to the update at bottom of the queue.
+  optional TaskState latest_state = 7;
 }
 
 
@@ -227,17 +250,35 @@ message FrameworkErrorMessage {
 
 message RegisterSlaveMessage {
   required SlaveInfo slave = 1;
+
+  // Resources that are checkpointed by the slave (e.g., persistent
+  // volume or dynamic reservation). Frameworks need to release
+  // checkpointed resources explicitly.
+  repeated Resource checkpointed_resources = 3;
+
+  // NOTE: This is a hack for the master to detect the slave's
+  // version. If unset the slave is < 0.21.0.
+  // TODO(bmahler): Do proper versioning: MESOS-986.
+  optional string version = 2;
 }
 
 
 message ReregisterSlaveMessage {
-  // TODO(bmahler): Deprecate and remove the explicit slave_id as
-  // SlaveInfo already includes this information.
-  required SlaveID slave_id = 1;
   required SlaveInfo slave = 2;
+
+  // Resources that are checkpointed by the slave (e.g., persistent
+  // volume or dynamic reservation). Frameworks need to release
+  // checkpointed resources explicitly.
+  repeated Resource checkpointed_resources = 7;
+
   repeated ExecutorInfo executor_infos = 4;
   repeated Task tasks = 3;
   repeated Archive.Framework completed_frameworks = 5;
+
+  // NOTE: This is a hack for the master to detect the slave's
+  // version. If unset the slave is < 0.21.0.
+  // TODO(bmahler): Do proper versioning: MESOS-986.
+  optional string version = 6;
 }
 
 
@@ -248,6 +289,8 @@ message SlaveRegisteredMessage {
 
 message SlaveReregisteredMessage {
   required SlaveID slave_id = 1;
+
+  repeated ReconcileTasksMessage reconciliations = 2;
 }
 
 
@@ -256,9 +299,16 @@ message UnregisterSlaveMessage {
 }
 
 
-message HeartbeatMessage {
-  required SlaveID slave_id = 1;
+// This message is periodically sent by the master to the slave.
+// If the slave is connected to the master, "connected" is true.
+message PingSlaveMessage {
+  required bool connected = 1;
 }
+
+
+// This message is sent by the slave to the master in response to the
+// PingSlaveMessage.
+message PongSlaveMessage {}
 
 
 // Tells a slave to shut down all executors of the given framework.
@@ -275,6 +325,14 @@ message ShutdownExecutorMessage {}
 message UpdateFrameworkMessage {
   required FrameworkID framework_id = 1;
   required string pid = 2;
+}
+
+
+// This message is sent to the slave whenever there is an update of
+// the resources that need to be checkpointed (e.g., persistent volume
+// or dynamic reservation).
+message CheckpointResourcesMessage {
+  repeated Resource resources = 1;
 }
 
 
@@ -320,60 +378,8 @@ message ReregisterExecutorMessage {
 }
 
 
-message RegisterProjdMessage {
-  required string project = 1;
-}
-
-
-message ProjdReadyMessage {
-  required string project = 1;
-}
-
-
-message ProjdUpdateResourcesMessage {
-  optional Parameters parameters = 1;
-}
-
-
-message FrameworkExpiredMessage {
-  required FrameworkID framework_id = 1;
-}
-
-
 message ShutdownMessage {
   optional string message = 1;
-}
-
-
-message AuthenticateMessage {
-  required string pid = 1; // PID that needs to be authenticated.
-}
-
-
-message AuthenticationMechanismsMessage {
-  repeated string mechanisms = 1; // List of available SASL mechanisms.
-}
-
-
-message AuthenticationStartMessage {
-  required string mechanism = 1;
-  optional string data = 2;
-}
-
-
-message AuthenticationStepMessage {
-  required bytes data = 1;
-}
-
-
-message AuthenticationCompletedMessage {}
-
-
-message AuthenticationFailedMessage {}
-
-
-message AuthenticationErrorMessage {
-  optional string error = 1;
 }
 
 
