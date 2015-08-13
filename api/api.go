@@ -9,19 +9,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/inmemory"
-	"github.com/VoltFramework/volt/mesoslib"
-	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/VoltFramework/volt/task"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+	"github.com/jimenez/mesoscon-demo/lib"
+	"github.com/jimenez/mesoscon-demo/lib/mesosproto"
 )
 
 var defaultState = mesosproto.TaskState_TASK_STAGING
 
 type API struct {
-	m        *mesoslib.MesosLib
+	handler  *mux.Router
+	m        *lib.DemoLib
 	registry Registry
 }
 
@@ -31,7 +31,6 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
-	api.m.Log.Warn(message)
 	w.WriteHeader(code)
 	data := struct {
 		Code    int    `json:"code"`
@@ -70,56 +69,17 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f := func() error {
-		var resources = api.m.BuildResources(task.Cpus, task.Mem, task.Disk)
-		offers, err := api.m.RequestOffers(resources)
-		if err != nil {
-			return err
-		}
+	var resources = lib.BuildResources(task.Cpus, task.Mem, task.Disk)
 
-		if len(offers) > 0 {
-			task.SlaveId = *offers[0].SlaveId.Value
-			task.SlaveHostname, err = api.m.GetSlaveHostname(task.SlaveId)
-			if err != nil {
-				api.m.Log.Warnf("Error getting slave hostname: %v", err)
-			}
+	api.m.LaunchTask(<-api.m.OffersCH, resources, &lib.Task{
+		ID:      task.ID,
+		Command: strings.Split(task.Command, " "),
+		Image:   task.DockerImage,
+		Volumes: task.Volumes,
+	})
 
-			if err := api.registry.Update(task.ID, task); err != nil {
-				return err
-			}
-
-			return api.m.LaunchTask(offers[0], resources, &mesoslib.Task{
-				ID:      task.ID,
-				Command: strings.Split(task.Command, " "),
-				Image:   task.DockerImage,
-				Volumes: task.Volumes,
-			})
-		}
-
-		return fmt.Errorf("No offers available")
-	}
-
-	if len(task.Files) > 0 {
-		if err := f(); err != nil {
-			api.writeError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		files, err := api.m.ReadFile(task.ID, task.Files...)
-		if err != nil {
-			api.writeError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(files); err != nil {
-			api.writeError(w, http.StatusInternalServerError, err.Error())
-		}
-	} else {
-		go f()
-		w.WriteHeader(http.StatusAccepted)
-		io.WriteString(w, "OK")
-	}
+	w.WriteHeader(http.StatusAccepted)
+	io.WriteString(w, "OK")
 }
 
 // Endpoint to list all the tasks
@@ -146,111 +106,20 @@ func (api *API) tasksList(w http.ResponseWriter, r *http.Request) {
 
 // Endpoint to delete a task
 func (api *API) tasksDelete(w http.ResponseWriter, r *http.Request) {
-	var (
-		vars = mux.Vars(r)
-		id   = vars["id"]
-	)
-
-	if err := api.m.KillTask(id); err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if err := api.registry.Delete(id); err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	io.WriteString(w, "OK")
 }
 
 // Endpoint to kill a task
 func (api *API) tasksKill(w http.ResponseWriter, r *http.Request) {
-	var (
-		vars = mux.Vars(r)
-		id   = vars["id"]
-	)
-	if err := api.m.KillTask(id); err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-	} else {
-		io.WriteString(w, "OK")
-	}
-}
-
-func (api *API) metrics(w http.ResponseWriter, r *http.Request) {
-	metrics, err := api.m.Metrics()
-	if err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(metrics); err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-	}
-}
-
-func (api *API) getFile(w http.ResponseWriter, r *http.Request) {
-	var (
-		vars = mux.Vars(r)
-		id   = vars["id"]
-		file = vars["file"]
-	)
-
-	files, err := api.m.ReadFile(id, []string{file}...)
-	if err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	content, ok := files[file]
-	if !ok {
-		api.writeError(w, http.StatusNotFound, file+" not found")
-		return
-	}
-	io.WriteString(w, content)
-}
-
-func (api *API) handleStates() {
-	for event := range api.m.GetEvent(mesosproto.Event_UPDATE) {
-		ID := event.Update.Status.TaskId.GetValue()
-
-		state := event.Update.Status.State
-
-		task, err := api.registry.Fetch(ID)
-		if err != nil {
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Update received for unknown task.")
-
-			continue
-		}
-
-		task.State = state
-		if err := api.registry.Update(ID, task); err != nil {
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage(), "error": err}).Error("Update task state in registry")
-		}
-
-		switch *state {
-		case mesosproto.TaskState_TASK_STAGING:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task was registered.")
-		case mesosproto.TaskState_TASK_STARTING:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is starting.")
-		case mesosproto.TaskState_TASK_RUNNING:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is running.")
-		case mesosproto.TaskState_TASK_FINISHED:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Info("Task is finished.")
-		case mesosproto.TaskState_TASK_FAILED:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task has failed.")
-		case mesosproto.TaskState_TASK_KILLED:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was killed.")
-		case mesosproto.TaskState_TASK_LOST:
-			api.m.Log.WithFields(logrus.Fields{"ID": ID, "message": event.Update.Status.GetMessage()}).Warn("Task was lost.")
-		}
-	}
+	io.WriteString(w, "OK")
 }
 
 // Register all the routes and then serve the API
-func ListenAndServe(m *mesoslib.MesosLib, port int) {
+func ListenAndServe(m *lib.DemoLib, port int) {
 	api := &API{
 		m:        m,
 		registry: inmemory.New(),
+		handler:  mux.NewRouter(),
 	}
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
@@ -258,10 +127,8 @@ func ListenAndServe(m *mesoslib.MesosLib, port int) {
 			"/tasks/{id}": api.tasksDelete,
 		},
 		"GET": {
-			"/_ping":                  api._ping,
-			"/tasks/{id}/file/{file}": api.getFile,
-			"/tasks":                  api.tasksList,
-			"/metrics":                api.metrics,
+			"/_ping": api._ping,
+			"/tasks": api.tasksList,
 		},
 		"POST": {
 			"/tasks": api.tasksAdd,
@@ -277,19 +144,14 @@ func ListenAndServe(m *mesoslib.MesosLib, port int) {
 			_fct := fct
 			_method := method
 
-			m.Log.WithFields(logrus.Fields{"method": _method, "route": _route}).Debug("Registering Volt-API route...")
-			m.Router.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				m.Log.WithFields(logrus.Fields{"from": r.RemoteAddr}).Infof("[%s] %s", _method, _route)
+			api.handler.Path(_route).Methods(_method).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 				_fct(w, r)
 			})
 		}
 	}
-	m.Router.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
-	go api.handleStates()
-	m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
+	api.handler.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
 	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), m.Router); err != nil {
-			m.Log.Fatal(err)
-		}
+		http.ListenAndServe(fmt.Sprintf(":%d", 9999), api.handler)
 	}()
 }

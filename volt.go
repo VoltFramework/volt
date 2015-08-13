@@ -8,9 +8,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/api"
-	"github.com/VoltFramework/volt/mesoslib"
-	"github.com/VoltFramework/volt/mesosproto"
 	flag "github.com/dotcloud/docker/pkg/mflag"
+	"github.com/jimenez/mesoscon-demo/lib"
 )
 
 var (
@@ -35,16 +34,12 @@ func init() {
 	flag.Parse()
 }
 
-func waitForSignals(m *mesoslib.MesosLib) {
+func waitForSignals() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	for sig := range signals {
 		log.Debugf("received signal %s unregistering framework\n", sig)
-
-		if err := m.UnRegisterFramework(); err != nil {
-			log.Fatal(err)
-		}
 
 		os.Exit(0)
 	}
@@ -73,30 +68,20 @@ func setupLogger() error {
 }
 
 func main() {
-	frameworkInfo := &mesosproto.FrameworkInfo{Name: &frameworkName, User: &user}
-
 	if err := setupLogger(); err != nil {
 		log.Fatal(err)
 	}
 
 	// initialize MesosLib
-	m := mesoslib.NewMesosLib(master, log, frameworkInfo, ip, port)
+	m := lib.New(master, "volt")
 
 	// start the API
 	api.ListenAndServe(m, port)
 
 	// try to register against the master
-	if err := m.RegisterFramework(); err != nil {
+	if err := m.Subscribe(); err != nil {
 		log.Fatal(err)
 	}
 
-	// wait for the registered event
-	select {
-	case event := <-m.GetEvent(mesosproto.Event_REGISTERED):
-		log.WithFields(logrus.Fields{"FrameworkId": *event.Registered.FrameworkId.Value}).Info("Registration successful.")
-	case <-time.After(registerTimeout):
-		log.WithField("--ip", ip).Fatal("Registration timed out. --ip must route to this host from the mesos-master.")
-	}
-
-	waitForSignals(m)
+	waitForSignals()
 }

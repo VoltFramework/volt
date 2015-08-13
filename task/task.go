@@ -1,8 +1,8 @@
 package task
 
 import (
-	"github.com/VoltFramework/volt/mesoslib"
-	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/jimenez/mesoscon-demo/lib"
+	"github.com/jimenez/mesoscon-demo/lib/mesosproto"
 )
 
 type Task struct {
@@ -17,5 +17,5 @@ type Task struct {
 	SlaveId       string                `json:"slave_id,string"`
 	SlaveHostname string                `json:"slave_hostname"`
 	State         *mesosproto.TaskState `json:"state,string"`
-	Volumes       []*mesoslib.Volume    `json:"volumes,omitempty"`
+	Volumes       []*lib.Volume         `json:"volumes,omitempty"`
 }
