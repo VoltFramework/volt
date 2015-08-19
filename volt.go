@@ -76,10 +76,10 @@ func main() {
 	m := lib.New(master, "volt")
 
 	// start the API
-	api.ListenAndServe(m, port)
+	api := api.ListenAndServe(m, port)
 
 	// try to register against the master
-	if err := m.Subscribe(); err != nil {
+	if err := m.Subscribe(api.HandleOffers); err != nil {
 		log.Fatal(err)
 	}
 

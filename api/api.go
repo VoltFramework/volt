@@ -23,6 +23,11 @@ type API struct {
 	handler  *mux.Router
 	m        *lib.DemoLib
 	registry Registry
+	OffersCH chan *mesosproto.Offer
+}
+
+func (api *API) HandleOffers(offer *mesosproto.Offer) {
+	api.OffersCH <- offer
 }
 
 // Simple _ping endpoint, returns OK
@@ -71,7 +76,7 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 	var resources = lib.BuildResources(task.Cpus, task.Mem, task.Disk)
 
-	api.m.LaunchTask(<-api.m.OffersCH, resources, &lib.Task{
+	api.m.LaunchTask(<-api.OffersCH, resources, &lib.Task{
 		ID:      task.ID,
 		Command: strings.Split(task.Command, " "),
 		Image:   task.DockerImage,
@@ -115,11 +120,12 @@ func (api *API) tasksKill(w http.ResponseWriter, r *http.Request) {
 }
 
 // Register all the routes and then serve the API
-func ListenAndServe(m *lib.DemoLib, port int) {
+func ListenAndServe(m *lib.DemoLib, port int) *API {
 	api := &API{
 		m:        m,
 		registry: inmemory.New(),
 		handler:  mux.NewRouter(),
+		OffersCH: make(chan *mesosproto.Offer),
 	}
 
 	endpoints := map[string]map[string]func(w http.ResponseWriter, r *http.Request){
@@ -154,4 +160,6 @@ func ListenAndServe(m *lib.DemoLib, port int) {
 	go func() {
 		http.ListenAndServe(fmt.Sprintf(":%d", 9999), api.handler)
 	}()
+
+	return api
 }
