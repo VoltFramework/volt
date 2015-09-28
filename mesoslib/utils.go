@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 func (m *MesosLib) send(msg proto.Message, path string) error {

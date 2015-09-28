@@ -3,9 +3,9 @@ package mesoslib
 import (
 	"fmt"
 
-	"code.google.com/p/goprotobuf/proto"
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/golang/protobuf/proto"
 )
 
 type Volume struct {

@@ -4,10 +4,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"code.google.com/p/goprotobuf/proto"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 )
 
