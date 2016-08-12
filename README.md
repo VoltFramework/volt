@@ -2,6 +2,8 @@
 
 *volt* is a simple Mesos framework written in Go.
 
+![build](https://travis-ci.org/VoltFramework/volt.svg?branch=master)
+
 ## Installation
 
 The following steps describe how to get started with the Volt framework.
