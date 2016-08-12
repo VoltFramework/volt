@@ -15,7 +15,7 @@ func (m *MesosLib) RequestOffers(resources []*mesosproto.Resource) ([]*mesosprot
 		if err := m.send(&mesosproto.ResourceRequestMessage{
 			FrameworkId: m.frameworkInfo.Id,
 			Requests: []*mesosproto.Request{
-				&mesosproto.Request{
+				{
 					Resources: resources,
 				},
 			},

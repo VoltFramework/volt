@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,7 +11,6 @@ import (
 	"github.com/VoltFramework/volt/api"
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
-	flag "github.com/dotcloud/docker/pkg/mflag"
 )
 
 var (
@@ -26,11 +26,11 @@ var (
 )
 
 func init() {
-	flag.IntVar(&port, []string{"p", "-port"}, 8080, "Port to listen on for the API")
-	flag.StringVar(&master, []string{"m", "-master"}, "localhost:5050", "Master to connect to")
-	flag.BoolVar(&debug, []string{"D", "-debug"}, false, "")
-	flag.StringVar(&user, []string{"u", "-user"}, "root", "User to execute tasks as")
-	flag.StringVar(&ip, []string{"-ip"}, "", "IP address to listen on [default: autodetect]")
+	flag.IntVar(&port, "-port", 8080, "Port to listen on for the API")
+	flag.StringVar(&master, "-master", "localhost:5050", "Master to connect to")
+	flag.BoolVar(&debug, "-debug", false, "")
+	flag.StringVar(&user, "-user", "root", "User to execute tasks as")
+	flag.StringVar(&ip, "-ip", "", "IP address to listen on [default: autodetect]")
 
 	flag.Parse()
 }

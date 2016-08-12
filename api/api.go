@@ -284,7 +284,7 @@ func ListenAndServe(m *mesoslib.MesosLib, port int) {
 			})
 		}
 	}
-	m.Router.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset, AssetDir, "./static/"}))
+	m.Router.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: "./static/"}))
 	go api.handleStates()
 	m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
 	go func() {
