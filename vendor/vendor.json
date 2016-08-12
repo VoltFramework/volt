@@ -1,0 +1,37 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "aXpg5iQ4hrCwoe/lgHdkDI9TE/Y=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "a283a10442df8dc09befd873fab202bf8a253d6a",
+			"revisionTime": "2016-07-16T02:56:31Z"
+		},
+		{
+			"checksumSHA1": "5ftkjfUwI9A6xCQ1PwIAd5+qlo0=",
+			"path": "github.com/elazarl/go-bindata-assetfs",
+			"revision": "e1a2a7ec64b07d04ac9ebb072404fe8b7b60de1b",
+			"revisionTime": "2016-08-03T19:23:04Z"
+		},
+		{
+			"checksumSHA1": "vmcIyeztHAxWq3fJd8iZvIUtqhI=",
+			"path": "github.com/getsentry/raven-go",
+			"revision": "c9d3cc542ad199f62c0264286be537f9bce6063c",
+			"revisionTime": "2016-08-05T00:17:29Z"
+		},
+		{
+			"checksumSHA1": "HbsAtLx8kV9I8UDXRMwSEvQaOeU=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "2c1988e8c18d14b142c0b472624f71647cf39adb",
+			"revisionTime": "2016-08-08T18:15:00Z"
+		},
+		{
+			"checksumSHA1": "n9OhGpUzhYStt+4MSkagPOFaLlk=",
+			"path": "github.com/gorilla/mux",
+			"revision": "780415097119f6f61c55475fe59b66f3c3e9ea53",
+			"revisionTime": "2016-08-01T17:00:46Z"
+		}
+	],
+	"rootPath": "/github.com/VoltFramework/volt"
+}
