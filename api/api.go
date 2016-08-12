@@ -14,7 +14,6 @@ import (
 	"github.com/VoltFramework/volt/mesoslib"
 	"github.com/VoltFramework/volt/mesosproto"
 	"github.com/VoltFramework/volt/task"
-	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
 
@@ -284,7 +283,7 @@ func ListenAndServe(m *mesoslib.MesosLib, port int) {
 			})
 		}
 	}
-	m.Router.PathPrefix("/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: "./static/"}))
+	m.Router.PathPrefix("/").Handler(http.FileServer(assetFS()))
 	go api.handleStates()
 	m.Log.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
 	go func() {
