@@ -15961,23 +15961,24 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
-	"static/js/angular.min.js": static_js_angular_min_js,
-	"static/js/controllers.js": static_js_controllers_js,
-	"static/js/ui-bootstrap-tpls-0.11.0.min.js": static_js_ui_bootstrap_tpls_0_11_0_min_js,
-	"static/js/services.js": static_js_services_js,
-	"static/js/angular-resource.min.js": static_js_angular_resource_min_js,
-	"static/js/angles.js": static_js_angles_js,
-	"static/js/Chart.min.js": static_js_chart_min_js,
-	"static/js/app.js": static_js_app_js,
-	"static/img/logo.png": static_img_logo_png,
-	"static/index.html": static_index_html,
-	"static/css/bootstrap.min.css": static_css_bootstrap_min_css,
-	"static/fonts/glyphicons-halflings-regular.ttf": static_fonts_glyphicons_halflings_regular_ttf,
-	"static/fonts/glyphicons-halflings-regular.eot": static_fonts_glyphicons_halflings_regular_eot,
+	"static/js/angular.min.js":                       static_js_angular_min_js,
+	"static/js/controllers.js":                       static_js_controllers_js,
+	"static/js/ui-bootstrap-tpls-0.11.0.min.js":      static_js_ui_bootstrap_tpls_0_11_0_min_js,
+	"static/js/services.js":                          static_js_services_js,
+	"static/js/angular-resource.min.js":              static_js_angular_resource_min_js,
+	"static/js/angles.js":                            static_js_angles_js,
+	"static/js/Chart.min.js":                         static_js_chart_min_js,
+	"static/js/app.js":                               static_js_app_js,
+	"static/img/logo.png":                            static_img_logo_png,
+	"static/index.html":                              static_index_html,
+	"static/css/bootstrap.min.css":                   static_css_bootstrap_min_css,
+	"static/fonts/glyphicons-halflings-regular.ttf":  static_fonts_glyphicons_halflings_regular_ttf,
+	"static/fonts/glyphicons-halflings-regular.eot":  static_fonts_glyphicons_halflings_regular_eot,
 	"static/fonts/glyphicons-halflings-regular.woff": static_fonts_glyphicons_halflings_regular_woff,
-	"static/fonts/glyphicons-halflings-regular.svg": static_fonts_glyphicons_halflings_regular_svg,
-	"static/favicon.ico": static_favicon_ico,
+	"static/fonts/glyphicons-halflings-regular.svg":  static_fonts_glyphicons_halflings_regular_svg,
+	"static/favicon.ico":                             static_favicon_ico,
 }
+
 // AssetDir returns the file names below a certain
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
@@ -16014,50 +16015,35 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type _bintree_t struct {
-	Func func() ([]byte, error)
+	Func     func() ([]byte, error)
 	Children map[string]*_bintree_t
 }
+
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"static": &_bintree_t{nil, map[string]*_bintree_t{
-		"js": &_bintree_t{nil, map[string]*_bintree_t{
-			"services.js": &_bintree_t{static_js_services_js, map[string]*_bintree_t{
-			}},
-			"angular-resource.min.js": &_bintree_t{static_js_angular_resource_min_js, map[string]*_bintree_t{
-			}},
-			"angles.js": &_bintree_t{static_js_angles_js, map[string]*_bintree_t{
-			}},
-			"Chart.min.js": &_bintree_t{static_js_chart_min_js, map[string]*_bintree_t{
-			}},
-			"app.js": &_bintree_t{static_js_app_js, map[string]*_bintree_t{
-			}},
-			"angular.min.js": &_bintree_t{static_js_angular_min_js, map[string]*_bintree_t{
-			}},
-			"controllers.js": &_bintree_t{static_js_controllers_js, map[string]*_bintree_t{
-			}},
-			"ui-bootstrap-tpls-0.11.0.min.js": &_bintree_t{static_js_ui_bootstrap_tpls_0_11_0_min_js, map[string]*_bintree_t{
-			}},
+	"static": {nil, map[string]*_bintree_t{
+		"js": {nil, map[string]*_bintree_t{
+			"services.js":                     {static_js_services_js, map[string]*_bintree_t{}},
+			"angular-resource.min.js":         {static_js_angular_resource_min_js, map[string]*_bintree_t{}},
+			"angles.js":                       {static_js_angles_js, map[string]*_bintree_t{}},
+			"Chart.min.js":                    {static_js_chart_min_js, map[string]*_bintree_t{}},
+			"app.js":                          {static_js_app_js, map[string]*_bintree_t{}},
+			"angular.min.js":                  {static_js_angular_min_js, map[string]*_bintree_t{}},
+			"controllers.js":                  {static_js_controllers_js, map[string]*_bintree_t{}},
+			"ui-bootstrap-tpls-0.11.0.min.js": {static_js_ui_bootstrap_tpls_0_11_0_min_js, map[string]*_bintree_t{}},
 		}},
-		"img": &_bintree_t{nil, map[string]*_bintree_t{
-			"logo.png": &_bintree_t{static_img_logo_png, map[string]*_bintree_t{
-			}},
+		"img": {nil, map[string]*_bintree_t{
+			"logo.png": {static_img_logo_png, map[string]*_bintree_t{}},
 		}},
-		"index.html": &_bintree_t{static_index_html, map[string]*_bintree_t{
+		"index.html": {static_index_html, map[string]*_bintree_t{}},
+		"css": {nil, map[string]*_bintree_t{
+			"bootstrap.min.css": {static_css_bootstrap_min_css, map[string]*_bintree_t{}},
 		}},
-		"css": &_bintree_t{nil, map[string]*_bintree_t{
-			"bootstrap.min.css": &_bintree_t{static_css_bootstrap_min_css, map[string]*_bintree_t{
-			}},
+		"fonts": {nil, map[string]*_bintree_t{
+			"glyphicons-halflings-regular.eot":  {static_fonts_glyphicons_halflings_regular_eot, map[string]*_bintree_t{}},
+			"glyphicons-halflings-regular.woff": {static_fonts_glyphicons_halflings_regular_woff, map[string]*_bintree_t{}},
+			"glyphicons-halflings-regular.svg":  {static_fonts_glyphicons_halflings_regular_svg, map[string]*_bintree_t{}},
+			"glyphicons-halflings-regular.ttf":  {static_fonts_glyphicons_halflings_regular_ttf, map[string]*_bintree_t{}},
 		}},
-		"fonts": &_bintree_t{nil, map[string]*_bintree_t{
-			"glyphicons-halflings-regular.eot": &_bintree_t{static_fonts_glyphicons_halflings_regular_eot, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.woff": &_bintree_t{static_fonts_glyphicons_halflings_regular_woff, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.svg": &_bintree_t{static_fonts_glyphicons_halflings_regular_svg, map[string]*_bintree_t{
-			}},
-			"glyphicons-halflings-regular.ttf": &_bintree_t{static_fonts_glyphicons_halflings_regular_ttf, map[string]*_bintree_t{
-			}},
-		}},
-		"favicon.ico": &_bintree_t{static_favicon_ico, map[string]*_bintree_t{
-		}},
+		"favicon.ico": {static_favicon_ico, map[string]*_bintree_t{}},
 	}},
 }}
