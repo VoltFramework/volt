@@ -1,8 +1,8 @@
 package task
 
 import (
-	"github.com/jimenez/mesoscon-demo/mesoslib"
-	"github.com/jimenez/mesoscon-demo/mesoslib/mesosproto"
+	mesoslib "github.com/jimenez/go-mesoslib"
+	"github.com/jimenez/go-mesoslib/mesosproto"
 )
 
 type Task struct {

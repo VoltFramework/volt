@@ -9,7 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/api"
-	"github.com/jimenez/mesoscon-demo/mesoslib/scheduler"
+	"github.com/jimenez/go-mesoslib/scheduler"
 )
 
 var (

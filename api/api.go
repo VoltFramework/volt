@@ -13,9 +13,9 @@ import (
 	"github.com/VoltFramework/volt/inmemory"
 	"github.com/VoltFramework/volt/task"
 	"github.com/gorilla/mux"
-	"github.com/jimenez/mesoscon-demo/mesoslib"
-	"github.com/jimenez/mesoscon-demo/mesoslib/mesosproto"
-	"github.com/jimenez/mesoscon-demo/mesoslib/scheduler"
+	mesoslib "github.com/jimenez/go-mesoslib"
+	"github.com/jimenez/go-mesoslib/mesosproto"
+	"github.com/jimenez/go-mesoslib/scheduler"
 )
 
 var defaultState = mesosproto.TaskState_TASK_STAGING
