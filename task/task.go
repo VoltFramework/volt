@@ -1,8 +1,8 @@
 package task
 
 import (
-	"github.com/VoltFramework/volt/mesoslib"
-	"github.com/VoltFramework/volt/mesosproto"
+	"github.com/jimenez/mesoscon-demo/mesoslib"
+	"github.com/jimenez/mesoscon-demo/mesoslib/mesosproto"
 )
 
 type Task struct {
