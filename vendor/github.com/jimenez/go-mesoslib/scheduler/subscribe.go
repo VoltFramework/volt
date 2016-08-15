@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 
 	"github.com/jimenez/go-mesoslib/mesosproto/schedulerproto"
 )
@@ -44,8 +45,10 @@ func (lib *SchedulerLib) Subscribe(handler OfferHandler) error {
 			FrameworkInfo: lib.frameworkInfo,
 		},
 	}
-
-	body, err := lib.send(call, 200)
+	f := func(r *http.Response) {
+		lib.MesosStreamId = r.Header.Get("Mesos-Stream-Id")
+	}
+	body, err := lib.sendDetail(call, 200, f)
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,7 @@ type SchedulerLib struct {
 	master        string
 	frameworkInfo *mesosproto.FrameworkInfo
 	frameworkID   *mesosproto.FrameworkID
+	MesosStreamId string
 	tasks         map[string]*mesosproto.AgentID
 }
 
