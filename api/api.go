@@ -37,6 +37,7 @@ func (api *API) _ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) writeError(w http.ResponseWriter, code int, message string) {
+	logrus.Error(message)
 	w.WriteHeader(code)
 	data := struct {
 		Code    int    `json:"code"`
@@ -196,9 +197,11 @@ func ListenAndServe(m *scheduler.SchedulerLib, port int) *API {
 			})
 		}
 	}
+	api.handler.PathPrefix("/").Handler(http.FileServer(assetFS()))
+
 	logrus.WithFields(logrus.Fields{"port": port}).Info("Starting API...")
 	go func() {
-		http.ListenAndServe(fmt.Sprintf(":%d", 9999), api.handler)
+		http.ListenAndServe(fmt.Sprintf(":%d", port), api.handler)
 	}()
 
 	return api
