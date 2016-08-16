@@ -1,0 +1,11 @@
+FROM mesosphere/mesos:1.0.0
+
+RUN apt-get update && apt-get install wget
+
+WORKDIR /bin
+
+RUN wget https://raw.githubusercontent.com/jimenez/go-mesoslib/executor_lib/executor/example/executor
+RUN chmod +x executor
+
+RUN md5sum executor
+

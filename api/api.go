@@ -12,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/VoltFramework/volt/inmemory"
 	"github.com/VoltFramework/volt/task"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	mesoslib "github.com/jimenez/go-mesoslib"
 	"github.com/jimenez/go-mesoslib/mesosproto"
@@ -83,6 +84,17 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		Command: strings.Split(task.Command, " "),
 		Image:   task.DockerImage,
 		Volumes: task.Volumes,
+		Executor: &mesosproto.ExecutorInfo{
+			ExecutorId: &mesosproto.ExecutorID{Value: proto.String("volt-executor")},
+			Command: &mesosproto.CommandInfo{
+				Uris: []*mesosproto.CommandInfo_URI{
+					&mesosproto.CommandInfo_URI{
+						Value:      proto.String("/bin/executor"),
+						Executable: proto.Bool(true),
+					},
+				},
+			},
+		},
 	}); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return

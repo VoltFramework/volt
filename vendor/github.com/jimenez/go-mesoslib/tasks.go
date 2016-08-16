@@ -16,10 +16,11 @@ type Volume struct {
 }
 
 type Task struct {
-	ID      string
-	Command []string
-	Image   string
-	Volumes []*Volume
+	ID       string
+	Command  []string
+	Image    string
+	Volumes  []*Volume
+	Executor *mesosproto.ExecutorInfo
 }
 
 func NewTask(image string, command []string) *Task {
@@ -45,47 +46,48 @@ func CreateTaskInfo(offer *mesosproto.Offer, resources []*mesosproto.Resource, t
 		},
 		AgentId:   offer.AgentId,
 		Resources: resources,
-		Command:   &mesosproto.CommandInfo{},
+		//		Command:   &mesosproto.CommandInfo{},
+		Executor: task.Executor,
 	}
 
-	// Set value only if provided
-	if task.Command[0] != "" {
-		taskInfo.Command.Value = &task.Command[0]
-	}
+	// // Set value only if provided
+	// if task.Command[0] != "" {
+	// 	taskInfo.Command.Value = &task.Command[0]
+	// }
 
-	// Set args only if they exist
-	if len(task.Command) > 1 {
-		taskInfo.Command.Arguments = task.Command[1:]
-	}
+	// // Set args only if they exist
+	// if len(task.Command) > 1 {
+	// 	taskInfo.Command.Arguments = task.Command[1:]
+	// }
 
-	// Set the docker image if specified
-	if task.Image != "" {
-		taskInfo.Container = &mesosproto.ContainerInfo{
-			Type: mesosproto.ContainerInfo_DOCKER.Enum(),
-			Docker: &mesosproto.ContainerInfo_DockerInfo{
-				Image: &task.Image,
-			},
-		}
+	// // Set the docker image if specified
+	// if task.Image != "" {
+	// 	taskInfo.Container = &mesosproto.ContainerInfo{
+	// 		Type: mesosproto.ContainerInfo_DOCKER.Enum(),
+	// 		Docker: &mesosproto.ContainerInfo_DockerInfo{
+	// 			Image: &task.Image,
+	// 		},
+	// 	}
 
-		for _, v := range task.Volumes {
-			var (
-				vv   = v
-				mode = mesosproto.Volume_RW
-			)
+	// 	for _, v := range task.Volumes {
+	// 		var (
+	// 			vv   = v
+	// 			mode = mesosproto.Volume_RW
+	// 		)
 
-			if vv.Mode == "ro" {
-				mode = mesosproto.Volume_RO
-			}
+	// 		if vv.Mode == "ro" {
+	// 			mode = mesosproto.Volume_RO
+	// 		}
 
-			taskInfo.Container.Volumes = append(taskInfo.Container.Volumes, &mesosproto.Volume{
-				ContainerPath: &vv.ContainerPath,
-				HostPath:      &vv.HostPath,
-				Mode:          &mode,
-			})
-		}
+	// 		taskInfo.Container.Volumes = append(taskInfo.Container.Volumes, &mesosproto.Volume{
+	// 			ContainerPath: &vv.ContainerPath,
+	// 			HostPath:      &vv.HostPath,
+	// 			Mode:          &mode,
+	// 		})
+	// 	}
 
-		taskInfo.Command.Shell = proto.Bool(false)
-	}
+	// 	taskInfo.Command.Shell = proto.Bool(false)
+	// }
 
 	return &taskInfo
 }
