@@ -31,7 +31,7 @@ func (lib *SchedulerLib) handleEvents(body io.ReadCloser, handler OfferHandler) 
 			log.Println("framework", lib.name, "subscribed succesfully (", lib.frameworkID.String(), ")")
 		case schedulerproto.Event_OFFERS:
 			for _, offer := range event.GetOffers().GetOffers() {
-				handler(offer)
+				go handler(offer)
 			}
 			log.Println("framework", lib.name, "received", len(event.GetOffers().GetOffers()), "offer(s)")
 		}

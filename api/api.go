@@ -197,7 +197,8 @@ func ListenAndServe(m *scheduler.SchedulerLib, port int) *API {
 			"/tasks": api.tasksAdd,
 		},
 		"PUT": {
-			"/tasks/{id}/kill": api.tasksKill,
+			"/tasks/{id}/kill":       api.tasksKill,
+			"/tasks/{id}/checkpoint": api.tasksCheckpoint,
 		},
 	}
 

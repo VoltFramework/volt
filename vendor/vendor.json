@@ -41,26 +41,26 @@
 		{
 			"checksumSHA1": "fe/tFlJzu0r/yrn3SRB1FOZxEq8=",
 			"path": "github.com/jimenez/go-mesoslib",
-			"revision": "5ac6ecb3789a4e80daffe0b4d3edefabc27c94d7",
-			"revisionTime": "2016-08-22T01:08:09Z"
+			"revision": "4675dd537696f8930c505146d9cba2317185e85e",
+			"revisionTime": "2016-08-22T02:09:18Z"
 		},
 		{
 			"checksumSHA1": "QKN0L8YTbTSy20PIo+gNpfZ0qkg=",
 			"path": "github.com/jimenez/go-mesoslib/mesosproto",
-			"revision": "5ac6ecb3789a4e80daffe0b4d3edefabc27c94d7",
-			"revisionTime": "2016-08-22T01:08:09Z"
+			"revision": "4675dd537696f8930c505146d9cba2317185e85e",
+			"revisionTime": "2016-08-22T02:09:18Z"
 		},
 		{
 			"checksumSHA1": "GPryPvo3QMDTuJtiQXu85cJTvjI=",
 			"path": "github.com/jimenez/go-mesoslib/mesosproto/schedulerproto",
-			"revision": "5ac6ecb3789a4e80daffe0b4d3edefabc27c94d7",
-			"revisionTime": "2016-08-22T01:08:09Z"
+			"revision": "4675dd537696f8930c505146d9cba2317185e85e",
+			"revisionTime": "2016-08-22T02:09:18Z"
 		},
 		{
-			"checksumSHA1": "j/hTbM8YlvCBEa2duQqE4BpEuKU=",
+			"checksumSHA1": "Jgf81ekvLzYrZ3bl7DnKwcGdIVQ=",
 			"path": "github.com/jimenez/go-mesoslib/scheduler",
-			"revision": "5ac6ecb3789a4e80daffe0b4d3edefabc27c94d7",
-			"revisionTime": "2016-08-22T01:08:09Z"
+			"revision": "4675dd537696f8930c505146d9cba2317185e85e",
+			"revisionTime": "2016-08-22T02:09:18Z"
 		}
 	],
 	"rootPath": "github.com/VoltFramework/volt"
