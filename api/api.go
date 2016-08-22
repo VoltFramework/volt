@@ -77,21 +77,26 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 		api.writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	vars := mux.Vars(r)
+	label := ""
+	if id, ok := vars["id"]; !ok {
+		id := make([]byte, 6)
+		n, err := rand.Read(id)
+		if n != len(id) || err != nil {
+			api.writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	id := make([]byte, 6)
-	n, err := rand.Read(id)
-	if n != len(id) || err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
+		task.ID = hex.EncodeToString(id)
+
+		if err := api.registry.Register(task.ID, task); err != nil {
+			api.writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	} else {
+		task.ID = id
+		label = "restore"
 	}
-
-	task.ID = hex.EncodeToString(id)
-
-	if err := api.registry.Register(task.ID, task); err != nil {
-		api.writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	var resources = mesoslib.BuildResources(task.Cpus, task.Mem, task.Disk)
 
 	offer := <-api.OffersCH
@@ -112,6 +117,14 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 					&mesosproto.CommandInfo_URI{
 						Value:      proto.String("/bin/runc"),
 						Executable: proto.Bool(true),
+					},
+				},
+			},
+			Labels: &mesosproto.Labels{
+				Labels: []*mesosproto.Label{
+					&mesosproto.Label{
+						Key:   &label,
+						Value: &task.ID,
 					},
 				},
 			},
