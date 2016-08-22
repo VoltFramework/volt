@@ -19,7 +19,7 @@ services:
       - /usr/bin/docker:/bin/docker
       - /tmp/criu:/criu
     privileged: true
-    hostname:  isabelandvictor.us
+    hostname:  198.27.68.58
     ports:
       - 5051:5051
 
@@ -34,7 +34,7 @@ services:
       - /usr/bin/docker:/bin/docker
       - /tmp/criu:/criu
     privileged: true
-    hostname:  isabelandvictor.us
+    hostname:  198.27.68.58
     ports:
       - 5052:5052
 
