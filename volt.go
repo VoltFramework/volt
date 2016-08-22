@@ -79,7 +79,7 @@ func main() {
 	api := api.ListenAndServe(m, port)
 
 	// try to register against the master
-	if err := m.Subscribe(api.HandleOffers); err != nil {
+	if err := m.Subscribe(api.HandleOffer, api.HandleTaskStatus); err != nil {
 		log.Fatal(err)
 	}
 

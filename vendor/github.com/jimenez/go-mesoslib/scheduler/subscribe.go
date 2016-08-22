@@ -9,7 +9,7 @@ import (
 	"github.com/jimenez/go-mesoslib/mesosproto/schedulerproto"
 )
 
-func (lib *SchedulerLib) handleEvents(body io.ReadCloser, handler OfferHandler) {
+func (lib *SchedulerLib) handleEvents(body io.ReadCloser, offerHandler OfferHandler, taskStatusHandler TaskStatusHandler) {
 	dec := json.NewDecoder(body)
 	for {
 		var event schedulerproto.Event
@@ -19,6 +19,7 @@ func (lib *SchedulerLib) handleEvents(body io.ReadCloser, handler OfferHandler) 
 		if event.GetType() == schedulerproto.Event_UPDATE {
 			taskStatus := event.GetUpdate().GetStatus()
 			lib.tasks[taskStatus.GetTaskId().GetValue()] = taskStatus.GetAgentId()
+			go taskStatusHandler(taskStatus)
 			log.Println("Status for", taskStatus.GetTaskId().GetValue(), "on", taskStatus.GetAgentId().GetValue(), "is", taskStatus.GetState().String())
 			if taskStatus.GetUuid() != nil {
 				lib.Acknowledge(taskStatus.GetTaskId(), taskStatus.GetAgentId(), taskStatus.GetUuid())
@@ -31,14 +32,14 @@ func (lib *SchedulerLib) handleEvents(body io.ReadCloser, handler OfferHandler) 
 			log.Println("framework", lib.name, "subscribed succesfully (", lib.frameworkID.String(), ")")
 		case schedulerproto.Event_OFFERS:
 			for _, offer := range event.GetOffers().GetOffers() {
-				go handler(offer)
+				go offerHandler(offer)
 			}
 			log.Println("framework", lib.name, "received", len(event.GetOffers().GetOffers()), "offer(s)")
 		}
 	}
 }
 
-func (lib *SchedulerLib) Subscribe(handler OfferHandler) error {
+func (lib *SchedulerLib) Subscribe(offerHandler OfferHandler, taskStatusHandler TaskStatusHandler) error {
 	call := &schedulerproto.Call{
 		Type: schedulerproto.Call_SUBSCRIBE.Enum(),
 		Subscribe: &schedulerproto.Call_Subscribe{
@@ -52,6 +53,6 @@ func (lib *SchedulerLib) Subscribe(handler OfferHandler) error {
 	if err != nil {
 		return err
 	}
-	go lib.handleEvents(body, handler)
+	go lib.handleEvents(body, offerHandler, taskStatusHandler)
 	return nil
 }

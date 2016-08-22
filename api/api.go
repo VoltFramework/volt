@@ -28,8 +28,23 @@ type API struct {
 	OffersCH chan *mesosproto.Offer
 }
 
-func (api *API) HandleOffers(offer *mesosproto.Offer) {
+func (api *API) HandleOffer(offer *mesosproto.Offer) {
 	api.OffersCH <- offer
+}
+
+func (api *API) HandleTaskStatus(taskStatus *mesosproto.TaskStatus) {
+	ID := taskStatus.TaskId.GetValue()
+	state := taskStatus.State
+
+	task, err := api.registry.Fetch(ID)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"ID": ID, "message": taskStatus.GetMessage()}).Warn("Update received for unknown task.")
+		return
+	}
+	task.State = state
+	if err := api.registry.Update(ID, task); err != nil {
+		logrus.WithFields(logrus.Fields{"ID": ID, "message": taskStatus.GetMessage(), "error": err}).Error("Update task state in registry")
+	}
 }
 
 // Simple _ping endpoint, returns OK
@@ -79,7 +94,9 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 
 	var resources = mesoslib.BuildResources(task.Cpus, task.Mem, task.Disk)
 
-	if err := api.m.LaunchTask(<-api.OffersCH, resources, &mesoslib.Task{
+	offer := <-api.OffersCH
+
+	if err := api.m.LaunchTask(offer, resources, &mesoslib.Task{
 		ID:      task.ID,
 		Command: strings.Split(task.Command, " "),
 		Image:   task.DockerImage,
@@ -100,6 +117,13 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	task.SlaveId = offer.AgentId.GetValue()
+	task.SlaveHostname = offer.GetHostname()
+	if err := api.registry.Update(task.ID, task); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -176,6 +200,18 @@ func (api *API) tasksRestore(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
 }
 
+func (api *API) metrics(w http.ResponseWriter, r *http.Request) {
+	metrics, err := api.m.Metrics()
+	if err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
+		api.writeError(w, http.StatusInternalServerError, err.Error())
+	}
+}
+
 // Register all the routes and then serve the API
 func ListenAndServe(m *scheduler.SchedulerLib, port int) *API {
 	api := &API{
@@ -190,11 +226,13 @@ func ListenAndServe(m *scheduler.SchedulerLib, port int) *API {
 			"/tasks/{id}": api.tasksDelete,
 		},
 		"GET": {
-			"/_ping": api._ping,
-			"/tasks": api.tasksList,
+			"/_ping":   api._ping,
+			"/tasks":   api.tasksList,
+			"/metrics": api.metrics,
 		},
 		"POST": {
-			"/tasks": api.tasksAdd,
+			"/tasks/{id}/restore": api.tasksAdd,
+			"/tasks":              api.tasksAdd,
 		},
 		"PUT": {
 			"/tasks/{id}/kill":       api.tasksKill,

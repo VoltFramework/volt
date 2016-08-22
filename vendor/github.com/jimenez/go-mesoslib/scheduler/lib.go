@@ -26,3 +26,4 @@ func New(master, name string) *SchedulerLib {
 }
 
 type OfferHandler func(offer *mesosproto.Offer)
+type TaskStatusHandler func(taskStatus *mesosproto.TaskStatus)
