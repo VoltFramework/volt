@@ -42,8 +42,11 @@
                 <div class="form-group">
                     <label for="inputCommand">Command</label>
                     <input type="text" class="form-control" ng-model="task.cmd" id="inputCommand">
-                    <p class="help-block">Use absolute path, like /bin/ls</p>
-                </div>
+                 </div>
+		<div class="form-group">
+                    <label for="inputExecutor">Executor</label>
+                    <input type="text" class="form-control" ng-model="task.executor" id="inputCommand">
+		</div
         </form>
         </div>
         <div class="modal-footer">
@@ -52,7 +55,7 @@
         </div>
     </script>
 
-      <script type="text/ng-template" id="file.html">
+<!--      <script type="text/ng-template" id="file.html">
         <div class="modal-header">
             <h3 class="modal-title" >{{file.name}}</h3>
         </div>
@@ -64,7 +67,7 @@
             <button class="btn btn-primary" ng-click="refresh()">Refresh</button>
         </div>
     </script>
-
+-->
 
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
@@ -98,7 +101,7 @@
 		<th>Command</th>
 		<th>Hostname</th>
 		<th>State</th>
-		<th>OUTPUTS</th>
+<!--		<th>OUTPUTS</th> -->
 	    </tr>
 	    </thead>
             <tbody>
@@ -129,7 +132,7 @@
 		  <td>{{task.cmd}}</td>
 		  <td>{{task.slave_hostname}}</td>
 		  <td><span class="label label-{{task.class}}">{{task.state}}</span></td>
-		  <td>
+<!--		  <td>
 		    <span class="label label-primary" ng-controller="File">
 		      <a href="#" ng-click="open('stdout', task.id, 'lg')" style="color: #fff !important">stdout</a>
 		    </span>
@@ -137,14 +140,14 @@
 		    <span class="label label-primary" ng-controller="File">
 		      <a href="#" ng-click="open('stderr', task.id, 'lg')" style="color: #fff !important">stderr</a>
 		  </span>
-		  </td>
+		  </td> -->
 		  <td>
-		    <a href="#" ng-click="kill(task.id)">
-		      <span class="glyphicon glyphicon-remove"/>
+		    <a href="#" ng-click="checkpoint(task.id)">
+		      <span class="glyphicon glyphicon-save"/>
 		    </a>
 		    &nbsp;
-		    <a href="#" ng-click="trash(task.id)">
-		      <span class="glyphicon glyphicon-trash"/>
+		    <a href="#" ng-click="restore(task.id)">
+		      <span class="glyphicon glyphicon-open"/>
 		</a>
 		</td>
 		</tr>

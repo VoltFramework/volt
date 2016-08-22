@@ -6,7 +6,7 @@ services:
     ports:
       - 5050:5050
 
-  slave1:
+  slave:
     build:
       context: .
       dockerfile: Dockerfile.executor
@@ -22,21 +22,6 @@ services:
     hostname:  198.27.68.58
     ports:
       - 5051:5051
-
-  slave2:
-    image : volt_slave1
-    links:
-      - master:master
-    command: mesos-slave --work_dir=/mesos --port=5052 --systemd_enable_support=false --master=master:5050 --containerizers=docker,mesos --executor_environment_variables={\"AGENT_ADDR\":\"localhost:5052\"}
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/bin/docker
-      - /tmp/criu:/criu
-    privileged: true
-    hostname:  198.27.68.58
-    ports:
-      - 5052:5052
 
   volt:
      build: .

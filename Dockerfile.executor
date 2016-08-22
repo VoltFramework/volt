@@ -1,6 +1,6 @@
 FROM jimenez/mesos:1.0.0
 
-RUN apt-get update && apt-get install wget libseccomp-dev criu docker-engine=1.11.2-0~wily -y --force-yes
+RUN apt-get update && apt-get install wget libseccomp-dev docker-engine=1.11.2-0~wily -y --force-yes
 
 WORKDIR /bin
 

@@ -64,6 +64,7 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(&data); err != nil {
+		logrus.Errorf("ERROR method: %v", err)
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 	}
 }
@@ -71,41 +72,52 @@ func (api *API) writeError(w http.ResponseWriter, code int, message string) {
 // Enpoint to call to add a new task
 func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	task := &task.Task{State: &defaultState}
 
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		api.writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
+	var t *task.Task
+
 	vars := mux.Vars(r)
 	label := ""
 	if id, ok := vars["id"]; !ok {
+		t = &task.Task{State: &defaultState}
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			api.writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		id := make([]byte, 6)
 		n, err := rand.Read(id)
 		if n != len(id) || err != nil {
+			logrus.Errorf("ERROR making id: %v", err)
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		task.ID = hex.EncodeToString(id)
+		t.ID = hex.EncodeToString(id)
 
-		if err := api.registry.Register(task.ID, task); err != nil {
+		if err := api.registry.Register(t.ID, t); err != nil {
+			logrus.Errorf("ERROR registring id: %v", err)
 			api.writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	} else {
-		task.ID = id
+		var err error
+		t, err = api.registry.Fetch(id)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{"ID": id}).Warn("Restore received for unknown task.")
+			return
+		}
 		label = "restore"
 	}
-	var resources = mesoslib.BuildResources(task.Cpus, task.Mem, task.Disk)
+
+	var resources = mesoslib.BuildResources(t.Cpus, t.Mem, t.Disk)
 
 	offer := <-api.OffersCH
 
 	if err := api.m.LaunchTask(offer, resources, &mesoslib.Task{
-		ID:      task.ID,
-		Command: strings.Split(task.Command, " "),
-		Image:   task.DockerImage,
-		Volumes: task.Volumes,
+		ID:      t.ID,
+		Command: strings.Split(t.Command, " "),
+		Image:   t.DockerImage,
+		Volumes: t.Volumes,
 		Executor: &mesosproto.ExecutorInfo{
 			ExecutorId: &mesosproto.ExecutorID{Value: proto.String("volt-executor")},
 			Command: &mesosproto.CommandInfo{
@@ -124,19 +136,21 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 				Labels: []*mesosproto.Label{
 					&mesosproto.Label{
 						Key:   &label,
-						Value: &task.ID,
+						Value: &t.ID,
 					},
 				},
 			},
 		},
 	}); err != nil {
+		logrus.Errorf("ERROR send lib api launch: %v", err)
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	task.SlaveId = offer.AgentId.GetValue()
-	task.SlaveHostname = offer.GetHostname()
-	if err := api.registry.Update(task.ID, task); err != nil {
+	t.SlaveId = offer.AgentId.GetValue()
+	t.SlaveHostname = offer.GetHostname()
+	if err := api.registry.Update(t.ID, t); err != nil {
+		logrus.Errorf("ERROR updating registry id: %v", err)
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -192,7 +206,7 @@ func (api *API) tasksCheckpoint(w http.ResponseWriter, r *http.Request) {
 		vars = mux.Vars(r)
 		id   = vars["id"]
 	)
-	message := fmt.Sprintf("chackpoint %s", id)
+	message := fmt.Sprintf("checkpoint %s", id)
 	if err := api.m.MessageTask(id, "volt-executor", message); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return

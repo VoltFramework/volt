@@ -36,7 +36,7 @@ voltControllers.controller('Charts', ['$scope', 'Metrics', '$interval', '$http',
 	];
     };
 
-    $interval(function() {Metrics.query(f);}, 5000);
+    $interval(function() {Metrics.query(f);}, 1000);
     Metrics.query(f);
 
     $scope.options = {
@@ -46,7 +46,7 @@ voltControllers.controller('Charts', ['$scope', 'Metrics', '$interval', '$http',
 }]);
 
 voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', function ($scope, Tasks, $interval, $http) {
-  $scope.refreshInterval = 5;
+  $scope.refreshInterval = 1;
   $interval(function() {
       Tasks.query(function(d) {
           $scope.tasks = d;
@@ -60,16 +60,24 @@ voltControllers.controller('Tasks', ['$scope', 'Tasks', '$interval', '$http', fu
     $scope.kill = function (id) {
       $http({method: 'PUT', url: '/tasks/'+id+'/kill'}).success(function(data) {});
     };
+
+    $scope.checkpoint = function (id) {
+      $http({method: 'PUT', url: '/tasks/'+id+'/checkpoint'}).success(function(data) {});
+    };
+    $scope.restore = function (id) {
+      $http({method: 'POST', url: '/tasks/'+id+'/restore'}).success(function(data) {});
+    };
 }]);
 
 
 voltControllers.controller('Modal', function ($scope, $modal, $log) {
   $scope.task = {
-    cpus:'0.1',
+    cpus:'1',
     mem:'32',
     disk:'0',
     docker_image:'busybox',
-    cmd:'/bin/ls'
+    cmd:'/bin/ls',
+    executor: 'go-mesoslib-executor'  
   }
   $scope.open = function (size) {
 
