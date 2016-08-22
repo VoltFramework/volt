@@ -9,6 +9,7 @@ RUN set -ex \
     && apk add --no-cache --virtual .build-deps git \
     && go get github.com/jteeuwen/go-bindata/... \
     && go get github.com/elazarl/go-bindata-assetfs/... \
+    && go get github.com/davecgh/go-spew/spew/... \
     && go-bindata-assetfs -pkg api static/... \
     && mv bindata_assetfs.go api/static.go \
     && go install --ldflags '-extldflags "-static"' \

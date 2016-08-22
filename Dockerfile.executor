@@ -1,11 +1,17 @@
-FROM mesosphere/mesos:1.0.0
+FROM jimenez/mesos:1.0.0
 
-RUN apt-get update && apt-get install wget
+RUN apt-get update && apt-get install wget libseccomp-dev criu docker-engine=1.11.2-0~wily -y --force-yes
 
 WORKDIR /bin
 
 RUN wget https://raw.githubusercontent.com/jimenez/go-mesoslib/executor_lib/executor/example/executor
 RUN chmod +x executor
 
-RUN md5sum executor
+RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc1/runc-linux-amd64
+RUN install -D -m0755 runc-linux-amd64 runc
+
+RUN wget https://raw.githubusercontent.com/docker/docker/master/hack/dind
+RUN chmod +x dind
+
+ENTRYPOINT ["/bin/dind"]
 

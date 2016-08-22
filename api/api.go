@@ -92,6 +92,10 @@ func (api *API) tasksAdd(w http.ResponseWriter, r *http.Request) {
 						Value:      proto.String("/bin/executor"),
 						Executable: proto.Bool(true),
 					},
+					&mesosproto.CommandInfo_URI{
+						Value:      proto.String("/bin/runc"),
+						Executable: proto.Bool(true),
+					},
 				},
 			},
 		},
@@ -151,8 +155,8 @@ func (api *API) tasksCheckpoint(w http.ResponseWriter, r *http.Request) {
 		vars = mux.Vars(r)
 		id   = vars["id"]
 	)
-
-	if err := api.m.KillTask(id); err != nil {
+	message := fmt.Sprintf("chackpoint %s", id)
+	if err := api.m.MessageTask(id, "volt-executor", message); err != nil {
 		api.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

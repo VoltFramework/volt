@@ -6,17 +6,37 @@ services:
     ports:
       - 5050:5050
 
-  slave:
+  slave1:
     build:
       context: .
       dockerfile: Dockerfile.executor
     links:
       - master:master
-    command: mesos-slave --work_dir=/mesos --master=master:5050 --containerizers=docker,mesos
+    command: mesos-slave --work_dir=/mesos --systemd_enable_support=false --master=master:5050 --containerizers=docker,mesos --executor_environment_variables={\"AGENT_ADDR\":\"localhost:5051\"}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/bin/docker
+      - /tmp/criu:/criu
+    privileged: true
+    hostname:  isabelandvictor.us
+    ports:
+      - 5051:5051
+
+  slave2:
+    image : volt_slave1
+    links:
+      - master:master
+    command: mesos-slave --work_dir=/mesos --port=5052 --systemd_enable_support=false --master=master:5050 --containerizers=docker,mesos --executor_environment_variables={\"AGENT_ADDR\":\"localhost:5052\"}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/bin/docker
+      - /tmp/criu:/criu
+    privileged: true
+    hostname:  isabelandvictor.us
+    ports:
+      - 5052:5052
 
   volt:
      build: .
@@ -25,3 +45,4 @@ services:
      command: -master=master:5050
      ports:
        - 8080:8080
+     restart: always
